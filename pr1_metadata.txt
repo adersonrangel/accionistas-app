@@ -1,0 +1,1 @@
+PR 1: Permitir múltiples acciones por accionista con validación de porcentaje total
