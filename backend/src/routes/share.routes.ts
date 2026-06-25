@@ -1,9 +1,9 @@
-import express from "express";
+import express, { Router } from "express";
 import Share from "../models/share.model";
 import adminOnly from "../middleware/adminOnly";
 import validateSharePercentage from "../middleware/validateSharePercentage";
 
-const router = express.Router();
+const router = Router({ mergeParams: true });
 
 // List all shares
 router.get("/", async (req, res) => {
@@ -20,9 +20,16 @@ router.get("/:id", async (req, res) => {
 
 // Create share (admin only + validation)
 router.post("/", adminOnly, validateSharePercentage, async (req, res) => {
-	const newShare = new Share(req.body);
-	await newShare.save();
-	res.status(201).json({ data: newShare });
+	try {
+		const newShare = new Share({
+			...req.body,
+			shareholderId: req.params.shareholderId,
+		});
+		await newShare.save();
+		res.status(201).json({ data: newShare });
+	} catch (error) {
+		res.status(500).json({ error: "Internal server error" });
+	}
 });
 
 // Update share (admin only + validation)
