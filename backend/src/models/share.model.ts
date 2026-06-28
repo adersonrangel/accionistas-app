@@ -2,6 +2,11 @@ import { Schema, model } from "mongoose";
 
 const shareSchema = new Schema(
 	{
+		shareholderId: {
+			type: Schema.Types.ObjectId,
+			ref: "Shareholder",
+			required: true,
+		},
 		id: { type: String, required: true, unique: true },
 		number: { type: String, required: true },
 		acquisitionDate: { type: Date, required: true },
@@ -16,16 +21,5 @@ const shareSchema = new Schema(
 		timestamps: true,
 	},
 );
-
-// Ensure percentage validation on update/create
-shareSchema.path("percentage").validate(
-	(val) => {
-		return val >= 0 && val <= 100;
-	},
-	(msg) => `Percentage must be between 0 and 100`,
-);
-
-// Virtual to expose percentage in JSON if needed
-shareSchema.set("toJSON", { virtuals: true });
 
 export default model("Share", shareSchema);

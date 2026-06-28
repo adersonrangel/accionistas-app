@@ -7,27 +7,36 @@ const validateSharePercentage = async (
 	res: Response,
 	next: NextFunction,
 ) => {
-	const { shareholderId, percentage } = req.body;
-	if (!shareholderId || !percentage) {
-		return res
-			.status(400)
-			.json({ error: "shareholderId and percentage are required" });
+	try {
+		const shareholderId = req.params.shareholderId || req.body.shareholderId;
+		const { percentage } = req.body;
+
+		if (!shareholderId || percentage === undefined) {
+			return res
+				.status(400)
+				.json({ error: "shareholderId and percentage are required" });
+		}
+
+		const shareholder = await Shareholder.findById(shareholderId);
+		if (!shareholder) {
+			return res.status(404).json({ error: "Shareholder not found" });
+		}
+
+		const currentShares = await Share.find({ shareholderId });
+		const currentTotal = currentShares.reduce(
+			(sum, s) => sum + s.percentage,
+			0,
+		);
+
+		if (currentTotal + percentage > 100) {
+			return res
+				.status(422)
+				.json({ error: "Total allocation cannot exceed 100%" });
+		}
+		next();
+	} catch (error) {
+		return res.status(500).json({ error: "Internal server error" });
 	}
-
-	const shareholder = await Shareholder.findById(shareholderId);
-	if (!shareholder)
-		return res.status(404).json({ error: "Shareholder not found" });
-
-	// Compute current sum
-	const currentShares = await Share.find({ shareholderId });
-	const currentTotal = currentShares.reduce((sum, s) => sum + s.percentage, 0);
-
-	if (currentTotal + percentage > 100) {
-		return res
-			.status(400)
-			.json({ error: "Total percentage cannot exceed 100%" });
-	}
-	next();
 };
 
 export default validateSharePercentage;
