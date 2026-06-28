@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 // Define Share schema (already created in share.model.ts)
 // Reference it here for building Shareholder schema
-import Share from "./share.model";
+import Share from "./share.model.ts";
 
 const shareholderSchema = new Schema(
 	{

@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import accionistasRoutes from "./routes/accionistas";
-import authRoutes from "./routes/auth.routes";
-import authMiddleware from "./middleware/auth.middleware";
-import shareRoutes from "./routes/share.routes";
+import accionistasRoutes from "./routes/accionistas.js";
+import authRoutes from "./routes/auth.routes.ts";
+import authMiddleware from "./middleware/auth.middleware.ts";
+import shareRoutes from "./routes/share.routes.ts";
 
 const app = express();
 
