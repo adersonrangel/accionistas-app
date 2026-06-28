@@ -1,0 +1,15 @@
+# SDD Configuration for implementing backend validation logic in frontend
+change:
+  id: frontend-backend-validation
+  name: Implement backend validation logic in frontend
+  description: >
+    Replicate backend validation rules in the frontend to provide early client-side validation
+    and improve user experience. This includes form validation, business rule checks,
+    and error handling mirroring backend behavior.
+  scope: frontend
+  artifactStore: both
+  executionMode: auto
+  chainedPRStrategy: auto-forecast
+  reviewBudget: 400
+  created: 2026-06-28
+  updated: 2026-06-28
