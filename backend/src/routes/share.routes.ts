@@ -1,7 +1,7 @@
 import express, { Router } from "express";
-import Share from "../models/share.model";
-import adminOnly from "../middleware/adminOnly";
-import validateSharePercentage from "../middleware/validateSharePercentage";
+import Share from "../models/share.model.ts";
+import adminOnly from "../middleware/adminOnly.ts";
+import validateSharePercentage from "../middleware/validateSharePercentage.ts";
 
 const router = Router({ mergeParams: true });
 

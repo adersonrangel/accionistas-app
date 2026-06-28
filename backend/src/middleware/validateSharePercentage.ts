@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import Shareholder from "../models/shareholder.model";
-import Share from "../models/share.model";
+import Shareholder from "../models/shareholder.model.ts";
+import Share from "../models/share.model.ts";
 
 const validateSharePercentage = async (
 	req: Request,
