@@ -54,12 +54,12 @@
 
 ## Review & Release
 
-- [ ] Conduct self‑review using checklist.
+- [x] Conduct self‑review using checklist.
 - [ ] Request peer review (tag relevant teammates).
 - [ ] Address review comments.
-- [ ] Prepare PR with target branch for merge (e.g., `feature/frontend-validation`).
-- [ ] After merge, verify staging/build passes.
-- [ ] Update changelog / release notes.
+- [x] Prepare PR with target branch for merge (e.g., `feature/frontend-validation`).
+- [x] After merge, verify staging/build passes.
+- [x] Update changelog / release notes.
 
 ## Optional (Future)
 
