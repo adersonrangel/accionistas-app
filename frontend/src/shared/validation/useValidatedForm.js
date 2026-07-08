@@ -36,8 +36,12 @@ export function useValidatedForm(initialValues, fieldRules) {
 		}));
 	};
 
-	const resetForm = () => {
-		setFieldValues({ ...initialValues });
+	const resetForm = (values) => {
+		if (values) {
+			setFieldValues({ ...values });
+		} else {
+			setFieldValues({ ...initialValues });
+		}
 		setFieldErrors({});
 	};
 

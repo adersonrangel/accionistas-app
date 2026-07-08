@@ -96,6 +96,25 @@ describe("useValidatedForm hook", () => {
 		expect(result.current.fieldErrors.email).toBeUndefined();
 	});
 
+	it("reset accepts values to populate the form", () => {
+		const { result } = renderHook(() =>
+			useValidatedForm({ email: "", age: "" }, fieldRules),
+		);
+
+		act(() => {
+			result.current.reset({
+				email: "juan@example.com",
+				age: "30",
+			});
+		});
+
+		expect(result.current.fieldValues).toEqual({
+			email: "juan@example.com",
+			age: "30",
+		});
+		expect(result.current.fieldErrors).toEqual({});
+	});
+
 	it("handleSubmit calls onValid when all fields valid", () => {
 		const onValid = vi.fn();
 		const { result } = renderHook(() =>
