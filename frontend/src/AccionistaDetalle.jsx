@@ -65,13 +65,14 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 
 	return (
 		<div className="modal-overlay" onClick={onClose}>
-			<div className="modal" onClick={(e) => e.stopPropagation()}>
-				<div className="modal-header">
-					<h2>Asignar acciones</h2>
-					<button className="btn btn-small" onClick={onClose}>
-						Cerrar
-					</button>
-				</div>
+			<div
+					className="modal card"
+					onClick={(e) => e.stopPropagation()}
+					role="dialog"
+					aria-modal="true"
+					aria-label="Asignar acciones"
+				>
+				<h2>Asignar acciones</h2>
 				{error && <div className="alert alert-error">{error}</div>}
 				{cargando ? (
 					<p className="text-muted">Cargando acciones disponibles...</p>
@@ -116,6 +117,9 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 						onClick={() => onConfirm(seleccion)}
 					>
 						Asignar seleccionadas
+					</button>
+					<button type="button" className="btn btn-secondary" onClick={onClose}>
+						Cancelar
 					</button>
 				</div>
 			</div>
