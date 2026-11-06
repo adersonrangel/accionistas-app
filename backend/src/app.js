@@ -21,16 +21,16 @@ app.get("/health", (req, res) => {
 // API routes
 app.use("/api/accionistas", accionistasRoutes);
 
-// Share routes with auth guard
+// Acciones routes with auth guard
 (async () => {
 	const { default: authMiddleware } = await import(
 		"./middleware/auth.middleware.ts"
 	);
-	const { default: shareRoutes } = await import("./routes/share.routes.ts");
+	const { default: accionesRoutes } = await import("./routes/acciones.routes.ts");
 	app.use(
-		"/api/shareholders/:shareholderId/shares",
+		"/api/acciones",
 		authMiddleware,
-		shareRoutes,
+		accionesRoutes,
 	);
 })();
 

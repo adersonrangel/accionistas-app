@@ -3,7 +3,7 @@ import cors from "cors";
 import accionistasRoutes from "./routes/accionistas.js";
 import authRoutes from "./routes/auth.routes.ts";
 import authMiddleware from "./middleware/auth.middleware.ts";
-import shareRoutes from "./routes/share.routes.ts";
+import accionesRoutes from "./routes/acciones.routes.ts";
 
 const app = express();
 
@@ -22,7 +22,7 @@ app.use("/api", authRoutes);
 app.use("/api/accionistas", accionistasRoutes);
 
 // Share routes with auth guard
-app.use("/api/shareholders/:shareholderId/shares", authMiddleware, shareRoutes);
+app.use("/api/acciones", authMiddleware, accionesRoutes);
 
 // Error handler genérico
 app.use(
