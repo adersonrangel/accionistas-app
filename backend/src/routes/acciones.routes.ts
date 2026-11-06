@@ -31,6 +31,18 @@ router.get("/", async (req, res) => {
 	}
 });
 
+// GET /api/acciones/disponibles - registered but unassigned actions
+router.get("/disponibles", async (req, res) => {
+	try {
+		const acciones = await Accion.find({ shareholderId: null }).sort({
+			code: 1,
+		});
+		res.json({ data: acciones });
+	} catch (err) {
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
 // GET /api/acciones/:id - get one
 router.get("/:id", async (req, res) => {
 	try {
