@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AccionistaModal from "./AccionistaModal.jsx";
+import AccionistaDetalle from "./AccionistaDetalle.jsx";
 
 const API_URL = "http://localhost:3001/api/accionistas";
 
@@ -10,6 +11,7 @@ export default function AccionistasManager() {
 	const [mensaje, setMensaje] = useState("");
 	const [modalAbierto, setModalAbierto] = useState(false);
 	const [accionistaEditando, setAccionistaEditando] = useState(null);
+	const [accionistaDetallando, setAccionistaDetallando] = useState(null);
 
 	async function cargarAccionistas() {
 		setLoading(true);
@@ -97,6 +99,16 @@ export default function AccionistasManager() {
 			});
 	}
 
+if (accionistaDetallando) {
+		return (
+			<AccionistaDetalle
+				accionista={accionistaDetallando}
+				onBack={() => setAccionistaDetallando(null)}
+				onRefresh={cargarAccionistas}
+			/>
+		);
+	}
+
 	return (
 		<div className="container">
 			<div className="page-header">
@@ -147,6 +159,12 @@ export default function AccionistasManager() {
 									<td>{a.porcentajeAcciones}%</td>
 									<td>{a.fechaIngreso}</td>
 									<td>
+										<button
+											className="btn btn-small"
+											onClick={() => setAccionistaDetallando(a)}
+										>
+											Ver
+										</button>
 										<button
 											className="btn btn-small"
 											onClick={() => abrirModalEdicion(a)}
