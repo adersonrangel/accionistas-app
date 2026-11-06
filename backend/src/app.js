@@ -34,6 +34,30 @@ app.use("/api/accionistas", accionistasRoutes);
 	);
 })();
 
+// Assignment routes (auth + admin) nested under accionista.
+// Express 4 `use()` does not capture :id in a string path, so the mount
+// uses a regex to capture the accionista id; the sub-router resets
+// req.params, so it is kept on the request for the assign routes.
+(async () => {
+	const { default: authMiddleware } = await import(
+		"./middleware/auth.middleware.ts"
+	);
+	const { default: adminOnly } = await import("./middleware/adminOnly.ts");
+	const { default: accionesAsignacionRoutes } = await import(
+		"./routes/acciones-asignacion.routes.ts"
+	);
+	app.use(
+		/^\/api\/accionistas\/([^\/]+)\/acciones/,
+		(req, _res, next) => {
+			req.accionistaId = req.params[0];
+			next();
+		},
+		authMiddleware,
+		adminOnly,
+		accionesAsignacionRoutes
+	);
+})();
+
 // Error handler genérico
 app.use((err, req, res, next) => {
 	console.error(err.stack);
