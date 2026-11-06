@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useValidatedForm } from "./shared/validation";
+import AccionistaModal from "./AccionistaModal.jsx";
 
 const API_URL = "http://localhost:3001/api/accionistas";
 
@@ -7,45 +7,9 @@ export default function AccionistasManager() {
 	const [accionistas, setAccionistas] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-	const [editando, setEditando] = useState(false);
 	const [mensaje, setMensaje] = useState("");
-
-	// Validation rules for each field
-	const fieldRules = {
-		nombre: [{ type: "required" }],
-		apellido: [{ type: "required" }],
-		dni: [{ type: "required" }],
-		email: [
-			{ type: "required" },
-			{
-				type: "pattern",
-				params: { pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" },
-			},
-		],
-		porcentajeAcciones: [{ type: "required" }],
-		fechaIngreso: [{ type: "required" }],
-		telefono: [],
-		direccion: [],
-	};
-
-	const initialValues = {
-		id: null,
-		nombre: "",
-		apellido: "",
-		dni: "",
-		email: "",
-		porcentajeAcciones: "",
-		fechaIngreso: "",
-		telefono: "",
-		direccion: "",
-	};
-
-	const {
-		getFieldProps,
-		handleSubmit,
-		reset: resetForm,
-		fieldErrors,
-	} = useValidatedForm(initialValues, fieldRules);
+	const [modalAbierto, setModalAbierto] = useState(false);
+	const [accionistaEditando, setAccionistaEditando] = useState(null);
 
 	async function cargarAccionistas() {
 		setLoading(true);
@@ -69,53 +33,49 @@ export default function AccionistasManager() {
 		cargarAccionistas();
 	}, []);
 
-	function handleCreateOrUpdate(data) {
-		// data contains all fields including id if editing
-		const payload = { ...data };
-		if (!editando) delete payload.id;
+	function abrirModalNuevo() {
+		setAccionistaEditando(null);
+		setModalAbierto(true);
+	}
 
-		const url = editando ? `${API_URL}/${data.id}` : API_URL;
-		const method = editando ? "PUT" : "POST";
+	function abrirModalEdicion(acc) {
+		setAccionistaEditando(acc);
+		setModalAbierto(true);
+	}
 
-		fetch(url, {
-			method,
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(payload),
-		})
-			.then(async (res) => {
-				const json = await res.json();
-				if (!res.ok) {
-					throw new Error(json.error || "Ocurrió un problema");
-				}
-				return json;
-			})
-			.then(() => {
-				setMensaje(
-					editando
-						? "Accionista actualizado correctamente"
-						: "Accionista creado correctamente",
-				);
-				resetForm();
-				setEditando(false);
-				cargarAccionistas();
-			})
-			.catch((err) => {
-				setMensaje(`Error: ${err.message}`);
+	function cerrarModal() {
+		setModalAbierto(false);
+		setAccionistaEditando(null);
+	}
+
+	async function guardarAccionista(values, esEdicion) {
+		const payload = { ...values };
+		if (!esEdicion) delete payload.id;
+
+		const url = esEdicion ? `${API_URL}/${accionistaEditando.id}` : API_URL;
+		const method = esEdicion ? "PUT" : "POST";
+
+		try {
+			const res = await fetch(url, {
+				method,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
 			});
-	}
-
-	const handleSubmitWrapper = handleSubmit(handleCreateOrUpdate);
-
-	function fillFormEdit(acc) {
-		setEditando(true);
-		resetForm(acc);
-		window.scrollTo({ top: 0, behavior: "smooth" });
-	}
-
-	function resetFormHandler() {
-		resetForm();
-		setEditando(false);
-		setMensaje("");
+			const json = await res.json();
+			if (!res.ok) {
+				return json.error || "Ocurrió un problema";
+			}
+			setMensaje(
+				esEdicion
+					? "Accionista actualizado correctamente"
+					: "Accionista creado correctamente",
+			);
+			cerrarModal();
+			cargarAccionistas();
+			return null;
+		} catch (err) {
+			return `Error de conexión: ${err.message}`;
+		}
 	}
 
 	function eliminar(id) {
@@ -139,7 +99,12 @@ export default function AccionistasManager() {
 
 	return (
 		<div className="container">
-			<h1>🏨 Administración de Accionistas</h1>
+			<div className="page-header">
+				<h1>🏨 Administración de Accionistas</h1>
+				<button className="btn btn-primary" onClick={abrirModalNuevo}>
+					+ Agregar Accionista
+				</button>
+			</div>
 
 			{mensaje && (
 				<div
@@ -148,150 +113,6 @@ export default function AccionistasManager() {
 					{mensaje}
 				</div>
 			)}
-
-			<section className="card">
-				<h2>{editando ? "Editar Accionista" : "Nuevo Accionista"}</h2>
-				<form onSubmit={handleSubmitWrapper} className="form-grid">
-					<div className="field">
-						<label>Nombre</label>
-						<input
-							id="nombre"
-							{...getFieldProps("nombre")}
-							required
-							aria-describedby={fieldErrors.nombre ? "nombre-error" : undefined}
-						/>
-						{fieldErrors.nombre && (
-							<span id="nombre-error" role="alert" aria-live="polite">
-								{fieldErrors.nombre}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>Apellido</label>
-						<input
-							id="apellido"
-							{...getFieldProps("apellido")}
-							required
-							aria-describedby={
-								fieldErrors.apellido ? "apellido-error" : undefined
-							}
-						/>
-						{fieldErrors.apellido && (
-							<span id="apellido-error" role="alert" aria-live="polite">
-								{fieldErrors.apellido}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>DNI</label>
-						<input
-							id="dni"
-							{...getFieldProps("dni")}
-							required
-							aria-describedby={fieldErrors.dni ? "dni-error" : undefined}
-						/>
-						{fieldErrors.dni && (
-							<span id="dni-error" role="alert" aria-live="polite">
-								{fieldErrors.dni}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>Email</label>
-						<input
-							type="email"
-							id="email"
-							{...getFieldProps("email")}
-							required
-							aria-describedby={fieldErrors.email ? "email-error" : undefined}
-						/>
-						{fieldErrors.email && (
-							<span id="email-error" role="alert" aria-live="polite">
-								{fieldErrors.email}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>% Acciones</label>
-						<input
-							type="number"
-							step="0.01"
-							id="porcentajeAcciones"
-							{...getFieldProps("porcentajeAcciones")}
-							required
-							aria-describedby={
-								fieldErrors.porcentajeAcciones ? "porcentaje-error" : undefined
-							}
-						/>
-						{fieldErrors.porcentajeAcciones && (
-							<span id="porcentaje-error" role="alert" aria-live="polite">
-								{fieldErrors.porcentajeAcciones}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>Fecha de Ingreso</label>
-						<input
-							type="date"
-							id="fechaIngreso"
-							{...getFieldProps("fechaIngreso")}
-							required
-							aria-describedby={
-								fieldErrors.fechaIngreso ? "fecha-error" : undefined
-							}
-						/>
-						{fieldErrors.fechaIngreso && (
-							<span id="fecha-error" role="alert" aria-live="polite">
-								{fieldErrors.fechaIngreso}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>Teléfono</label>
-						<input
-							id="telefono"
-							{...getFieldProps("telefono")}
-							aria-describedby={
-								fieldErrors.telefono ? "telefono-error" : undefined
-							}
-						/>
-						{fieldErrors.telefono && (
-							<span id="telefono-error" role="alert" aria-live="polite">
-								{fieldErrors.telefono}
-							</span>
-						)}
-					</div>
-					<div className="field">
-						<label>Dirección</label>
-						<input
-							id="direccion"
-							{...getFieldProps("direccion")}
-							aria-describedby={
-								fieldErrors.direccion ? "direccion-error" : undefined
-							}
-						/>
-						{fieldErrors.direccion && (
-							<span id="direccion-error" role="alert" aria-live="polite">
-								{fieldErrors.direccion}
-							</span>
-						)}
-					</div>
-					<div className="form-actions">
-						<button type="submit" className="btn btn-primary">
-							{editando ? "Guardar Cambios" : "Crear Accionista"}
-						</button>
-						{editando && (
-							<button
-								type="button"
-								className="btn btn-secondary"
-								onClick={resetFormHandler}
-							>
-								Cancelar
-							</button>
-						)}
-					</div>
-				</form>
-			</section>
 
 			<section className="card">
 				<h2>Listado de Accionistas</h2>
@@ -328,7 +149,7 @@ export default function AccionistasManager() {
 									<td>
 										<button
 											className="btn btn-small"
-											onClick={() => fillFormEdit(a)}
+											onClick={() => abrirModalEdicion(a)}
 										>
 											Editar
 										</button>
@@ -345,6 +166,13 @@ export default function AccionistasManager() {
 					</table>
 				)}
 			</section>
+
+			<AccionistaModal
+				open={modalAbierto}
+				accionista={accionistaEditando}
+				onClose={cerrarModal}
+				onSave={guardarAccionista}
+			/>
 		</div>
 	);
 }
