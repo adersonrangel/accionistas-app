@@ -4,8 +4,8 @@
   "description": "Backend para administración de accionistas de hotel",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --env-file-if-exists=.env src/server.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
