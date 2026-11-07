@@ -155,41 +155,24 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 // Tab "Acciones": detalle (por ahora el código) de las acciones asignadas,
 // con opción de quitarlas y de asignar acciones registradas (solo admin).
 // Para el rol normal es solo lectura: ve las asignadas, sin controles de escritura.
-function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
+// La lista la carga el padre (junto con el detalle), así el total de noches
+// aparece de una; acá solo se consume por props y se pide refresh tras mutar.
+function TabAcciones({
+	accionista,
+	token,
+	onMensaje,
+	isAdmin,
+	acciones,
+	cargando,
+	error,
+	onRefresh,
+}) {
 	const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-	const [asignadas, setAsignadas] = useState([]);
-	const [cargando, setCargando] = useState(true);
-	const [error, setError] = useState(null);
 	const [modalAbierto, setModalAbierto] = useState(false);
 	const [disponibles, setDisponibles] = useState([]);
 	const [modalCargando, setModalCargando] = useState(false);
 	const [modalError, setModalError] = useState("");
 	const [accionQuitando, setAccionQuitando] = useState(null);
-
-	const cargarAsignadas = useCallback(async () => {
-		setCargando(true);
-		setError(null);
-		try {
-			const res = await fetch(
-				`${API_BASE}/accionistas/${accionista.id}/acciones`,
-				{ headers: authHeaders }
-			);
-			const json = await res.json();
-			if (!res.ok) throw new Error(json.error || "Error cargando acciones");
-			setAsignadas(json.data || []);
-			onTotalNoches(sumarNochesDeBeneficio(json.data || []));
-		} catch (err) {
-			setError(err.message);
-		} finally {
-			setCargando(false);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [accionista.id]);
-
-	useEffect(() => {
-		// eslint-disable-next-line react-hooks/set-state-in-effect
-		cargarAsignadas();
-	}, [cargarAsignadas]);
 
 	function abrirModal() {
 		setModalError("");
@@ -227,7 +210,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
 					: "Acciones ya asignadas, sin cambios"
 			);
 			setModalAbierto(false);
-			cargarAsignadas();
+			onRefresh();
 		} catch (err) {
 			setModalError(err.message);
 		} finally {
@@ -250,7 +233,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.error || "No se pudo quitar la acción");
 			onMensaje(`Acción ${accion.code} quitada`);
-			cargarAsignadas();
+			onRefresh();
 		} catch (err) {
 			onMensaje(`Error al quitar la acción: ${err.message}`);
 		}
@@ -268,7 +251,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
 			{error && <div className="alert alert-error">{error}</div>}
 			{cargando ? (
 				<p className="text-muted">Cargando...</p>
-			) : asignadas.length === 0 ? (
+			) : acciones.length === 0 ? (
 				<p className="text-muted">Este accionista no tiene acciones asignadas.</p>
 			) : (
 				<table className="table">
@@ -281,7 +264,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
 						</tr>
 					</thead>
 					<tbody>
-						{asignadas.map((a) => (
+						{acciones.map((a) => (
 							<tr key={a._id}>
 								<td>{a.code}</td>
 								<td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
@@ -323,12 +306,44 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
 }
 
 export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
+	const { token: appToken, headers: appHeaders, user: currentUser } = getSession();
+	const isAdmin = currentUser.role === "admin";
+
 	const [tab, setTab] = useState("datos");
 	const [mensaje, setMensaje] = useState("");
-	const [totalNoches, setTotalNoches] = useState(0);
+	// Las acciones asignadas viven acá para que el total de noches se cargue
+	// al abrir el detalle, sin necesidad de entrar al tab Acciones.
+	const [acciones, setAcciones] = useState([]);
+	const [cargando, setCargando] = useState(appToken != null);
+	const [error, setError] = useState(null);
 
-	const { token: appToken, user: currentUser } = getSession();
-	const isAdmin = currentUser.role === "admin";
+	const cargarAcciones = useCallback(async () => {
+		setCargando(true);
+		setError(null);
+		try {
+			const res = await fetch(
+				`${API_BASE}/accionistas/${accionista.id}/acciones`,
+				{ headers: appHeaders }
+			);
+			const json = await res.json();
+			if (!res.ok) throw new Error(json.error || "Error cargando acciones");
+			setAcciones(json.data || []);
+		} catch (err) {
+			setError(err.message);
+		} finally {
+			setCargando(false);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [accionista.id]);
+
+	useEffect(() => {
+		// Sin sesión no se pide nada: el total queda en 0 (y no hay tab Acciones).
+		if (!appToken) return;
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		cargarAcciones();
+	}, [cargarAcciones, appToken]);
+
+	const totalNoches = sumarNochesDeBeneficio(acciones);
 
 	function manejoMensaje(texto) {
 		setMensaje(texto);
@@ -387,7 +402,10 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 						token={appToken}
 						isAdmin={isAdmin}
 						onMensaje={manejoMensaje}
-						onTotalNoches={setTotalNoches}
+						acciones={acciones}
+						cargando={cargando}
+						error={error}
+						onRefresh={cargarAcciones}
 					/>
 				) : (
 					<p className="text-muted">Sin acceso a acciones.</p>

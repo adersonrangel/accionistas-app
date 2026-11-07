@@ -60,6 +60,43 @@ function mockFetch({ asignadas = [], disponibles = [] } = {}) {
 	return fetchMock;
 }
 
+// GET /acciones dinámico: refleja el estado mutado por el POST/DELETE, de modo
+// que el refresh del padre vuelva con la lista real (antes y despues de quitar).
+function mockFetchMutable(iniciales = []) {
+	const asignadas = [...iniciales];
+	const post = vi.fn(async (url) => {
+		if (url.includes("/accionistas/1/acciones")) {
+			return { ok: true, json: async () => ({ data: [], skipped: [] }) };
+		}
+		throw new Error("unexpected POST " + url);
+	});
+	const del = vi.fn(async (url) => {
+		const id = url.split("/").pop();
+		const i = asignadas.findIndex((a) => a._id === id);
+		if (i >= 0) asignadas.splice(i, 1);
+		return { ok: true, json: async () => ({ message: "ok" }) };
+	});
+	const get = vi.fn(async (url) => {
+		if (url.includes("/disponibles")) {
+			return { ok: true, json: async () => ({ data: [] }) };
+		}
+		if (url.includes("/acciones")) {
+			return { ok: true, json: async () => ({ data: [...asignadas] }) };
+		}
+		throw new Error("unexpected GET " + url);
+	});
+	const fetchMock = vi.fn(async (url, opts = {}) => {
+		const method = (opts.method || "GET").toUpperCase();
+		if (method === "POST") return post(url, opts);
+		if (method === "DELETE") return del(url, opts);
+		return get(url);
+	});
+	fetchMock.post = post;
+	fetchMock.del = del;
+	fetchMock.get = get;
+	return fetchMock;
+}
+
 beforeEach(() => {
 	vi.stubGlobal("localStorage", setupLocalStorage({ app_token: TOKEN, app_user: ADMIN_USER }));
 });
@@ -203,6 +240,51 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		).toBeTruthy();
 		const total = await screen.findByTestId("total-noches-beneficio");
 		expect(total.textContent.trim()).toBe("5");
+	});
+
+	it("carga el total de noches de beneficio de una vez al abrir el detalle", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({
+				asignadas: [
+					{ _id: "a1", code: "00001", percentage: 25, nochesDeBeneficio: 2 },
+					{ _id: "a2", code: "00002", percentage: 10, nochesDeBeneficio: 3 },
+				],
+			})
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		expect(
+			await screen.findByText("Accionista: Juan Perez")
+		).toBeTruthy();
+		// Sin abrir el tab Acciones: el total ya viene cargado junto al detalle.
+		const total = await screen.findByTestId("total-noches-beneficio");
+		await waitFor(() => expect(total.textContent.trim()).toBe("5"));
+	});
+
+	it("mantiene el total actualizado al quitar o asignar una accion", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetchMutable([
+				{ _id: "a1", code: "00001", percentage: 25, nochesDeBeneficio: 2 },
+			])
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const total = await screen.findByTestId("total-noches-beneficio");
+		await waitFor(() => expect(total.textContent.trim()).toBe("2"));
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+		await user.click(await screen.findByRole("button", { name: "Quitar" }));
+		const dialog = screen.getByRole("dialog");
+		await user.click(within(dialog).getByRole("button", { name: /quitar/i }));
+
+		// El refresh del padre vuelve con la lista achicada y la card se actualiza.
+		await waitFor(() => expect(total.textContent.trim()).toBe("0"));
+		expect(
+			await screen.findByText("Este accionista no tiene acciones asignadas.")
+		).toBeTruthy();
 	});
 
 	it("muestra guion y total cero cuando faltan las noches de beneficio", async () => {
