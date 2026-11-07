@@ -3,15 +3,14 @@ import AccionModal from "./AccionModal.jsx";
 import Pagination from "./Pagination.jsx";
 
 const API_URL = "http://localhost:3001/api/acciones";
-const LOGIN_URL = "http://localhost:3001/api/login";
+
+function safeGetItem(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
 
 export default function AccionesManager() {
-  const [token, setToken] = useState(() => localStorage.getItem("acciones_token"));
-  const [loginUsername, setLoginUsername] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [iniciando, setIniciando] = useState(false);
-
+  const appToken = safeGetItem("app_token");
+  const authHeaders = appToken ? { Authorization: `Bearer ${appToken}` } : {};
   const [acciones, setAcciones] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPorcentaje, setTotalPorcentaje] = useState(0);
@@ -21,42 +20,9 @@ export default function AccionesManager() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [accionEditando, setAccionEditando] = useState(null);
   const [page, setPage] = useState(1);
-const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
   const [pageSize, setPageSize] = useState(10);
 
-  async function iniciarSesion() {
-    setIniciando(true);
-    setLoginError("");
-    try {
-      const res = await fetch(LOGIN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setLoginError(json.error || "Credenciales inválidas");
-        return;
-      }
-      localStorage.setItem("acciones_token", json.token);
-      setToken(json.token);
-    } catch (err) {
-      setLoginError(`Error de conexión: ${err.message}`);
-    } finally {
-      setIniciando(false);
-    }
-  }
-
-  function cerrarSesion() {
-    localStorage.removeItem("acciones_token");
-    setToken(null);
-    setAcciones([]);
-    setTotalPorcentaje(0);
-  }
-
   async function cargarAcciones() {
-    if (!token) return;
     setLoading(true);
     setError(null);
     try {
@@ -66,7 +32,9 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       });
       const res = await fetch(`${API_URL}?${params}`, { headers: authHeaders });
       if (res.status === 401) {
-        cerrarSesion();
+        localStorage.removeItem("app_token");
+        localStorage.removeItem("app_user");
+        window.location.reload();
         return;
       }
       if (!res.ok) throw new Error("Error cargando acciones");
@@ -81,11 +49,12 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   async function cargarTotalPorcentaje() {
-    if (!token) return;
     try {
       const res = await fetch(`${API_URL}/total`, { headers: authHeaders });
       if (res.status === 401) {
-        cerrarSesion();
+        localStorage.removeItem("app_token");
+        localStorage.removeItem("app_user");
+        window.location.reload();
         return;
       }
       if (!res.ok) throw new Error("Error cargando el total de porcentajes");
@@ -97,11 +66,11 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   useEffect(() => {
-    if (token) {
+    if (appToken) {
       cargarAcciones();
       cargarTotalPorcentaje();
     }
-  }, [token, page, pageSize]);
+  }, [page, pageSize]);
 
   function abrirModalNuevo() {
     setAccionEditando(null);
@@ -134,7 +103,9 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       const json = await res.json();
       if (!res.ok) {
         if (res.status === 401) {
-          cerrarSesion();
+          localStorage.removeItem("app_token");
+          localStorage.removeItem("app_user");
+          window.location.reload();
           return "Sesión expirada. Inicia sesión de nuevo.";
         }
         return json.error || "Ocurrió un problema";
@@ -158,7 +129,9 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       });
       const json = await res.json();
       if (res.status === 401) {
-        cerrarSesion();
+        localStorage.removeItem("app_token");
+        localStorage.removeItem("app_user");
+        window.location.reload();
         return;
       }
       if (!res.ok) {
@@ -172,48 +145,6 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
     }
   }
 
-  if (!token) {
-    return (
-      <div className="container">
-        <div className="card" style={{ maxWidth: "400px", margin: "0 auto" }}>
-          <h2>Iniciar Sesión</h2>
-          <p className="text-muted">Acceso requerido para gestionar acciones.</p>
-          {loginError && <div className="alert alert-error">{loginError}</div>}
-          <div className="form-grid">
-            <div className="field">
-              <label htmlFor="login-user">Usuario</label>
-              <input
-                id="login-user"
-                type="text"
-                value={loginUsername}
-                onChange={(e) => setLoginUsername(e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="login-pass">Contraseña</label>
-              <input
-                id="login-pass"
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-              />
-            </div>
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={iniciarSesion}
-                disabled={iniciando}
-              >
-                {iniciando ? "Iniciando..." : "Entrar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container">
       <div className="page-header">
@@ -221,9 +152,6 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
         <div>
           <button className="btn btn-primary" onClick={abrirModalNuevo}>
             + Agregar Acción
-          </button>
-          <button className="btn btn-secondary" onClick={cerrarSesion}>
-            Salir
           </button>
         </div>
       </div>

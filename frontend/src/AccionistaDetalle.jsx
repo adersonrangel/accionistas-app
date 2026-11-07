@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
 
 const API_BASE = "http://localhost:3001/api";
-const LOGIN_URL = `${API_BASE}/login`;
 const ACCIONES_BASE = `${API_BASE}/acciones`;
+
+function safeGetItem(key) {
+	try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function getSession() {
+	const t = safeGetItem("app_token");
+	const headers = t ? { Authorization: `Bearer ${t}` } : {};
+	const raw = t ? safeGetItem("app_user") : null;
+	const user = raw ? JSON.parse(raw) : { username: "", role: "" };
+	return { token: t, headers, user };
+}
 
 // Tab "Datos": los campos del accionista (misma fuente que el listado).
 function TabDatos({ accionista }) {
@@ -132,6 +143,7 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 // Tab "Acciones": detalle (por ahora el código) de las acciones asignadas,
 // con opción de quitarlas y de asignar acciones registradas.
 function TabAcciones({ accionista, token, onMensaje }) {
+	const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 	const [asignadas, setAsignadas] = useState([]);
 	const [cargando, setCargando] = useState(true);
 	const [error, setError] = useState(null);
@@ -139,8 +151,6 @@ function TabAcciones({ accionista, token, onMensaje }) {
 	const [disponibles, setDisponibles] = useState([]);
 	const [modalCargando, setModalCargando] = useState(false);
 	const [modalError, setModalError] = useState("");
-
-	const authHeaders = { Authorization: `Bearer ${token}` };
 
 	const cargarAsignadas = useCallback(async () => {
 		setCargando(true);
@@ -159,7 +169,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 			setCargando(false);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [accionista.id, token]);
+	}, [accionista.id]);
 
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/set-state-in-effect
@@ -279,35 +289,10 @@ function TabAcciones({ accionista, token, onMensaje }) {
 
 export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 	const [tab, setTab] = useState("datos");
-	const [token, setToken] = useState(() => localStorage.getItem("acciones_token"));
-	const [loginUsername, setLoginUsername] = useState("");
-	const [loginPassword, setLoginPassword] = useState("");
-	const [loginError, setLoginError] = useState("");
-	const [iniciando, setIniciando] = useState(false);
 	const [mensaje, setMensaje] = useState("");
 
-	async function iniciarSesion() {
-		setIniciando(true);
-		setLoginError("");
-		try {
-			const res = await fetch(LOGIN_URL, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-			});
-			const json = await res.json();
-			if (!res.ok) {
-				setLoginError(json.error || "Credenciales inválidas");
-				return;
-			}
-			localStorage.setItem("acciones_token", json.token);
-			setToken(json.token);
-		} catch (err) {
-			setLoginError(`Error de conexión: ${err.message}`);
-		} finally {
-			setIniciando(false);
-		}
-	}
+	const { token: appToken, user: currentUser } = getSession();
+	const isAdmin = currentUser.role === "admin";
 
 	function manejoMensaje(texto) {
 		setMensaje(texto);
@@ -340,61 +325,27 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 				>
 					Datos
 				</button>
-				<button
-					className={`btn ${tab === "acciones" ? "btn-primary" : "btn-secondary"}`}
-					onClick={() => setTab("acciones")}
-				>
-					Acciones
-				</button>
+				{isAdmin && (
+					<button
+						className={`btn ${tab === "acciones" ? "btn-primary" : "btn-secondary"}`}
+						onClick={() => setTab("acciones")}
+					>
+						Acciones
+					</button>
+				)}
 			</nav>
 
 			<section className="card">
 				{tab === "datos" ? (
 					<TabDatos accionista={accionista} />
-				) : token ? (
+				) : isAdmin ? (
 					<TabAcciones
 						accionista={accionista}
-						token={token}
+						token={appToken}
 						onMensaje={manejoMensaje}
 					/>
 				) : (
-					<div style={{ maxWidth: "400px", margin: "0 auto" }}>
-						<h2>Iniciar Sesión</h2>
-						<p className="text-muted">
-							Acceso requerido para ver y gestionar las acciones.
-						</p>
-						{loginError && <div className="alert alert-error">{loginError}</div>}
-						<div className="form-grid">
-							<div className="field">
-								<label htmlFor="detalle-login-user">Usuario</label>
-								<input
-									id="detalle-login-user"
-									type="text"
-									value={loginUsername}
-									onChange={(e) => setLoginUsername(e.target.value)}
-								/>
-							</div>
-							<div className="field">
-								<label htmlFor="detalle-login-pass">Contraseña</label>
-								<input
-									id="detalle-login-pass"
-									type="password"
-									value={loginPassword}
-									onChange={(e) => setLoginPassword(e.target.value)}
-								/>
-							</div>
-							<div className="form-actions">
-								<button
-									type="button"
-									className="btn btn-primary"
-									onClick={iniciarSesion}
-									disabled={iniciando}
-								>
-									{iniciando ? "Iniciando..." : "Entrar"}
-								</button>
-							</div>
-						</div>
-					</div>
+					<p className="text-muted">Sin acceso a acciones.</p>
 				)}
 			</section>
 		</div>
