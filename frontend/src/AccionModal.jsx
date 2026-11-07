@@ -107,7 +107,7 @@ function AccionForm({ esEdicion, initialValues, onClose, onSave }) {
       <h2>{esEdicion ? "Editar Acción" : "Nueva Acción"}</h2>
       {serverError && <div className="alert alert-error">{serverError}</div>}
       <form onSubmit={handleSubmit(handleValidSubmit)} className="form-grid">
-        <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", gridColumn: "1 / -1" }}>
           <div style={{ flex: 1 }}>
             {esEdicion ? (
               <div className="field">
