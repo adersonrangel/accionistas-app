@@ -6,13 +6,27 @@ const { Accionista } = accionistaModule as {
 	Accionista: typeof import("mongoose").Model;
 };
 
-// Montado en /api/accionistas/:id/acciones tras authMiddleware + adminOnly.
+// Montado en /api/accionistas/:id/acciones tras authMiddleware (cualquier rol).
+// GET (ver acciones asignadas) es para todo usuario autenticado; POST/DELETE
+// (asignar/quitar) exigen rol admin, como exige la política del sistema.
 // La URL usa el campo numérico `id` de Accionista; se guarda su `_id` (ObjectId)
 // en Accion.shareholderId.
 const router = Router();
 
 function accionistaIdFrom(req: import("express").Request): string {
 	return (req as { accionistaId?: string }).accionistaId ?? "";
+}
+
+function onlyAdmin(
+	req: import("express").Request,
+	res: import("express").Response,
+	next: import("express").NextFunction
+) {
+	const user = req.user as { role?: string } | undefined;
+	if (user?.role !== "admin") {
+		return res.status(403).json({ error: "Access denied" });
+	}
+	next();
 }
 
 async function findAccionistaPorId(
@@ -41,8 +55,8 @@ router.get("/", async (req, res) => {
 	}
 });
 
-// POST /api/accionistas/:id/acciones - asignar 1 o varias acciones (lote atómico)
-router.post("/", async (req, res) => {
+// POST /api/accionistas/:id/acciones - asignar 1 o varias acciones (lote atómico, solo admin)
+router.post("/", onlyAdmin, async (req, res) => {
 	try {
 		const { accionIds } = req.body || {};
 		const accionistaId = accionistaIdFrom(req);
@@ -111,8 +125,8 @@ router.post("/", async (req, res) => {
 	}
 });
 
-// DELETE /api/accionistas/:id/acciones/:accionId - desasignar
-router.delete("/:accionId", async (req, res) => {
+// DELETE /api/accionistas/:id/acciones/:accionId - desasignar (solo admin)
+router.delete("/:accionId", onlyAdmin, async (req, res) => {
 	try {
 		const accionista = await findAccionistaPorId(accionistaIdFrom(req));
 		if (!accionista)

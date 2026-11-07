@@ -56,8 +56,11 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/accionistas/:id - eliminar
+// DELETE /api/accionistas/:id - eliminar (solo admin)
 router.delete("/:id", async (req, res) => {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Access denied" });
+  }
   try {
     const ok = await model.remove(req.params.id);
     if (!ok) return res.status(404).json({ error: "Accionista no encontrado" });

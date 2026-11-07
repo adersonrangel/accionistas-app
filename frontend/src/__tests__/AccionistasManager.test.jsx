@@ -31,11 +31,30 @@ function mockApi(accionistas) {
 	});
 }
 
+// El administrador es quien ve los controles de escritura (incl. Eliminar).
+function stubSessionAsAdmin() {
+	vi.stubGlobal(
+		"localStorage",
+		{
+			getItem: (k) =>
+				k === "app_token"
+					? "admin-token"
+					: k === "app_user"
+						? JSON.stringify({ username: "admin", role: "admin" })
+						: null,
+			setItem: vi.fn(),
+			removeItem: vi.fn(),
+			clear: vi.fn(),
+		}
+	);
+}
+
 describe("AccionistasManager con popup de alta/edición", () => {
 	let user;
 
 	beforeEach(() => {
 		user = userEvent.setup();
+		stubSessionAsAdmin();
 	});
 
 	afterEach(() => {
@@ -215,5 +234,71 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		expect(
 			fetchMock.mock.calls.filter(([, opts]) => opts?.method === "DELETE")
 		).toHaveLength(0);
+	});
+});
+
+describe("AccionistasManager - permisos por rol", () => {
+	let user;
+
+	const TOKEN = "test-token";
+	const USER_ROLE = JSON.stringify({ username: "normal", role: "user" });
+
+	beforeEach(() => {
+		user = userEvent.setup();
+		vi.stubGlobal(
+			"localStorage",
+			{
+				getItem: (k) => (k === "app_token" ? TOKEN : k === "app_user" ? USER_ROLE : null),
+				setItem: vi.fn(),
+				removeItem: vi.fn(),
+				clear: vi.fn(),
+			}
+		);
+	});
+
+	afterEach(() => {
+		cleanup();
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	it("no muestra el botón Eliminar para un usuario normal", async () => {
+		vi.stubGlobal("fetch", mockApi([ACCIONISTA]));
+		render(<AccionistasManager />);
+
+		expect(await screen.findByText("Juan")).toBeTruthy();
+		expect(screen.queryByRole("button", { name: /eliminar/i })).toBeNull();
+		// Ver/Editar siguen disponibles.
+		expect(screen.getByRole("button", { name: "Ver" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Editar" })).toBeTruthy();
+	});
+
+	it("envía el header Authorization en el DELETE (admin)", async () => {
+		vi.stubGlobal(
+			"localStorage",
+			{
+				getItem: (k) => (k === "app_token" ? TOKEN : k === "app_user" ? JSON.stringify({ username: "admin", role: "admin" }) : null),
+				setItem: vi.fn(),
+				removeItem: vi.fn(),
+				clear: vi.fn(),
+			}
+		);
+		const fetchMock = mockApi([ACCIONISTA]);
+		vi.stubGlobal("fetch", fetchMock);
+		render(<AccionistasManager />);
+		await screen.findByText("Juan");
+
+		await user.click(screen.getByRole("button", { name: /eliminar/i }));
+		await user.click(
+			within(screen.getByRole("dialog")).getByRole("button", { name: /eliminar/i })
+		);
+
+		await waitFor(() =>
+			expect(
+				fetchMock.mock.calls.filter(([, opts]) => opts?.method === "DELETE")
+			).toHaveLength(1)
+		);
+		const delCall = fetchMock.mock.calls.find(([, opts]) => opts?.method === "DELETE");
+		expect(delCall[1].headers.Authorization).toBe(`Bearer ${TOKEN}`);
 	});
 });

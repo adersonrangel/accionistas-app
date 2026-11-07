@@ -9,7 +9,7 @@ Branch: `feat/user-management`. Baseline commit: `361e83e`.
 - **S3** (user verbatim): "actualizamos los permisos en los modulos de accionistas y acciones."
 - **S4** (resolved product decision via Ask, 2026-11-06): Roles are `admin` and `user` (normal).
   - **admin**: permisos para todo — CRUD accionistas, CRUD acciones, asignación de acciones, y administración de usuarios.
-  - **user (normal)**: solo el módulo de accionistas (CRUD de accionistas). NO puede ver/usar el módulo de acciones ni asignaciones, ni administrar usuarios.
+  - **user (normal)**: ver accionistas (listado/detalle) y editarlos; NO eliminar accionistas; ver las acciones asignadas a un accionista (solo lectura); NO asignar/quitar acciones; NO usar el módulo de acciones ni administrar usuarios. (Corregido en L5.)
 - **S5**: Login único de entrada. Al abrir la app, si no hay una sesión válida (token JWT), se muestra la pantalla de login. Tras loguear, el rol del usuario (del JWT) determina qué módulos/pestañas son visibles. Se añade opción de cerrar sesión (logout).
 
 ## Behavior / contract (source of truth for both writers)
@@ -89,4 +89,10 @@ Each slice: behavior + tests + this doc updated together where applicable.
   - C4 `662d396` — T6: frontend central login gate, role nav, logout.
   - C5 `aaebc26` — T7+T8: UsersManager + strip embedded logins + auth headers + tab gating.
   - C6 `411d644` — T9: frontend tests (login, app gating, UsersManager).
+- **L5** (user verbatim, 2026-11-07): "cuando el usuario es del rol - normal, no se le debe permitir eliminar accionistas y se le debe permitir dentro de la opcion ver las acciones que tiene asignadas pero no agregar o eliminar nuevas acciones. Esas funciones son solo del administrador"
+- **L6** (evidence, 2026-11-07): permisos de rol normal implementados según L5:
+  - Backend: DELETE `/api/accionistas/:id` exige admin (403 `{error:"Access denied"}`, accionista intacto) — `routes/accionistas.js`.
+  - Backend: GET `/api/accionistas/:id/acciones` abierto a cualquier rol autenticado (mount sin `adminOnly` en `app.ts`/`app.js`); POST/DELETE de asignación con guard `onlyAdmin` en `routes/acciones-asignacion.routes.ts`.
+  - Frontend: `AccionistasManager.jsx` oculta "Eliminar" para rol user y envía `Authorization` en el DELETE (fix de bug latente); `AccionistaDetalle.jsx` muestra el tab Acciones a cualquier rol autenticado, en solo lectura para user (sin "+ Asignar acciones" ni "Quitar").
+  - Tests: 68 backend + 128 frontend en verde, incluidos casos 403 nuevos y solo-lectura.
   - Verification: backend 64/64 passing (5 files), frontend 120/120 passing (18 files).

@@ -31,7 +31,9 @@ app.use("/api/acciones", authMiddleware, adminOnly, accionesRoutes);
 // User administration routes: admin-only.
 app.use("/api/users", authMiddleware, adminOnly, usersRoutes);
 
-// Assignment routes (auth + admin) nested under accionista.
+// Assignment routes nested under accionista. GET (ver acciones asignadas)
+// permite a cualquier rol autenticado; POST/DELETE (asignar/quitar) son
+// admin-only por las guards propias del sub-router.
 // Express 4 `use()` does not capture :id in a string path, so the mount
 // uses a regex to capture the accionista id into req.params.id.
 app.use(
@@ -43,7 +45,6 @@ app.use(
 		next();
 	},
 	authMiddleware,
-	adminOnly,
 	accionesAsignacionRoutes
 );
 

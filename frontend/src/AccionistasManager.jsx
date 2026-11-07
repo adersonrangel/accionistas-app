@@ -13,6 +13,15 @@ function safeGetItem(key) {
 export default function AccionistasManager() {
 	const appToken = safeGetItem("app_token");
 	const authHeaders = appToken ? { Authorization: `Bearer ${appToken}` } : {};
+	const appUser = (() => {
+		const raw = safeGetItem("app_user");
+		try {
+			return raw ? JSON.parse(raw) : { username: "", role: "" };
+		} catch {
+			return { username: "", role: "" };
+		}
+	})();
+	const isAdmin = appUser.role === "admin";
 	const [accionistas, setAccionistas] = useState([]);
 	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(true);
@@ -108,7 +117,10 @@ export default function AccionistasManager() {
 		const id = eliminandoId;
 		setEliminandoId(null);
 		try {
-			const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+			const res = await fetch(`${API_URL}/${id}`, {
+				method: "DELETE",
+				headers: authHeaders,
+			});
 			const json = await res.json();
 			if (!res.ok) {
 				throw new Error(json.error || "No se pudo eliminar");
@@ -193,12 +205,14 @@ export default function AccionistasManager() {
 											>
 												Editar
 											</button>
-											<button
-												className="btn btn-small btn-danger"
-												onClick={() => solicitarEliminar(a.id)}
-											>
-												Eliminar
-											</button>
+												{isAdmin && (
+													<button
+														className="btn btn-small btn-danger"
+														onClick={() => solicitarEliminar(a.id)}
+													>
+														Eliminar
+													</button>
+												)}
 										</td>
 									</tr>
 								))}

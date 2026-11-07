@@ -259,4 +259,46 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		expect(response.statusCode).toBe(200);
 		expect(response.body.total).toBe(1);
 	});
+
+	it("denies DELETE /:id for a normal user (403) and keeps the accionista", async () => {
+		const created = await request(app)
+			.post("/api/accionistas")
+			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send(baseAccionista);
+		expect(created.statusCode).toBe(201);
+		const id = created.body.data.id;
+
+		const response = await request(app)
+			.delete(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${userToken}`);
+		expect(response.statusCode).toBe(403);
+		expect(response.body.error).toBe("Access denied");
+
+		const docs = await mongoose.connection.db
+			.collection(COLLECTION)
+			.find({ id })
+			.toArray();
+		expect(docs).toHaveLength(1);
+	});
+
+	it("allows an admin to DELETE /:id", async () => {
+		const created = await request(app)
+			.post("/api/accionistas")
+			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send(baseAccionista);
+		const id = created.body.data.id;
+
+		const response = await request(app)
+			.delete(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(response.statusCode).toBe(200);
+
+		const docs = await mongoose.connection.db
+			.collection(COLLECTION)
+			.find({ id })
+			.toArray();
+		expect(docs).toHaveLength(0);
+	});
 });

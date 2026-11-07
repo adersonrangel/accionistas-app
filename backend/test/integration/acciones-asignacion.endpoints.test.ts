@@ -212,7 +212,7 @@ describe("Asignacion de acciones a accionistas", () => {
 			expect(codes).toEqual(["00001", "00003"]);
 		});
 
-		it("404 accionista inexistente, 401 sin token, 403 no-admin", async () => {
+		it("404 accionista inexistente y 401 sin token", async () => {
 			const acc = await crearAccionista("Juan");
 
 			const notFound = await request(app)
@@ -223,11 +223,24 @@ describe("Asignacion de acciones a accionistas", () => {
 			const sinToken = await request(app)
 				.get(`/api/accionistas/${acc.id}/acciones`);
 			expect(sinToken.status).toBe(401);
+		});
 
-			const noAdmin = await request(app)
+		it("un usuario normal (rol user) puede ver las acciones asignadas", async () => {
+			const acc = await crearAccionista("Juan");
+			const a1 = await crearAccion("00001");
+
+			await request(app)
+				.post(`/api/accionistas/${acc.id}/acciones`)
+				.set("Authorization", `Bearer ${adminToken}`)
+				.send({ accionIds: [a1._id] });
+
+			const res = await request(app)
 				.get(`/api/accionistas/${acc.id}/acciones`)
 				.set("Authorization", `Bearer ${nonAdminToken}`);
-			expect(noAdmin.status).toBe(403);
+
+			expect(res.status).toBe(200);
+			expect(res.body.data).toHaveLength(1);
+			expect(res.body.data[0].code).toBe("00001");
 		});
 	});
 
@@ -288,6 +301,25 @@ describe("Asignacion de acciones a accionistas", () => {
 				.set("Authorization", `Bearer ${adminToken}`);
 			expect(res.status).toBe(404);
 			expect(res.body.error).toContain("Accion no encontrada");
+		});
+
+		it("403 para un usuario normal y no desasigna la accion", async () => {
+			const acc = await crearAccionista("Juan");
+			const a1 = await crearAccion("00001");
+
+			await request(app)
+				.post(`/api/accionistas/${acc.id}/acciones`)
+				.set("Authorization", `Bearer ${adminToken}`)
+				.send({ accionIds: [a1._id] });
+
+			const res = await request(app)
+				.delete(`/api/accionistas/${acc.id}/acciones/${a1._id}`)
+				.set("Authorization", `Bearer ${nonAdminToken}`);
+			expect(res.status).toBe(403);
+			expect(res.body.error).toBe("Access denied");
+
+			const desdeBd = await Accion.findById(a1._id);
+			expect(desdeBd?.shareholderId).toEqual(acc._id);
 		});
 	});
 

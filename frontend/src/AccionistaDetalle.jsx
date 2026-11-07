@@ -142,8 +142,9 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 }
 
 // Tab "Acciones": detalle (por ahora el código) de las acciones asignadas,
-// con opción de quitarlas y de asignar acciones registradas.
-function TabAcciones({ accionista, token, onMensaje }) {
+// con opción de quitarlas y de asignar acciones registradas (solo admin).
+// Para el rol normal es solo lectura: ve las asignadas, sin controles de escritura.
+function TabAcciones({ accionista, token, onMensaje, isAdmin }) {
 	const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 	const [asignadas, setAsignadas] = useState([]);
 	const [cargando, setCargando] = useState(true);
@@ -245,11 +246,13 @@ function TabAcciones({ accionista, token, onMensaje }) {
 
 	return (
 		<div>
-			<div className="detail-actions">
-				<button className="btn btn-primary" onClick={abrirModal}>
-					+ Asignar acciones
-				</button>
-			</div>
+			{isAdmin && (
+				<div className="detail-actions">
+					<button className="btn btn-primary" onClick={abrirModal}>
+						+ Asignar acciones
+					</button>
+				</div>
+			)}
 			{error && <div className="alert alert-error">{error}</div>}
 			{cargando ? (
 				<p className="text-muted">Cargando...</p>
@@ -261,7 +264,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 						<tr>
 							<th>Código</th>
 							<th>Porcentaje</th>
-							<th>Acciones</th>
+							{isAdmin && <th>Acciones</th>}
 						</tr>
 					</thead>
 					<tbody>
@@ -269,14 +272,16 @@ function TabAcciones({ accionista, token, onMensaje }) {
 							<tr key={a._id}>
 								<td>{a.code}</td>
 								<td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
-								<td>
-									<button
-										className="btn btn-small btn-danger"
-										onClick={() => solicitarQuitar(a)}
-									>
-										Quitar
-									</button>
-								</td>
+								{isAdmin && (
+									<td>
+										<button
+											className="btn btn-small btn-danger"
+											onClick={() => solicitarQuitar(a)}
+										>
+											Quitar
+										</button>
+									</td>
+								)}
 							</tr>
 						))}
 					</tbody>
@@ -341,7 +346,7 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 				>
 					Datos
 				</button>
-				{isAdmin && (
+				{appToken && (
 					<button
 						className={`btn ${tab === "acciones" ? "btn-primary" : "btn-secondary"}`}
 						onClick={() => setTab("acciones")}
@@ -354,10 +359,11 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 			<section className="card">
 				{tab === "datos" ? (
 					<TabDatos accionista={accionista} />
-				) : isAdmin ? (
+				) : appToken ? (
 					<TabAcciones
 						accionista={accionista}
 						token={appToken}
+						isAdmin={isAdmin}
 						onMensaje={manejoMensaje}
 					/>
 				) : (

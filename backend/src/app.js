@@ -52,7 +52,9 @@ app.get("/health", (req, res) => {
 	app.use("/api/users", authMiddleware, adminOnly, usersRoutes);
 })();
 
-// Assignment routes (auth + admin) nested under accionista.
+// Assignment routes nested under accionista. GET (ver acciones asignadas)
+// permite a cualquier rol autenticado; POST/DELETE (asignar/quitar) son
+// admin-only por las guards propias del sub-router.
 // Express 4 `use()` does not capture :id in a string path, so the mount
 // uses a regex to capture the accionista id; the sub-router resets
 // req.params, so it is kept on the request for the assign routes.
@@ -60,7 +62,6 @@ app.get("/health", (req, res) => {
 	const { default: authMiddleware } = await import(
 		"./middleware/auth.middleware.ts"
 	);
-	const { default: adminOnly } = await import("./middleware/adminOnly.ts");
 	const { default: accionesAsignacionRoutes } = await import(
 		"./routes/acciones-asignacion.routes.ts"
 	);
@@ -71,7 +72,6 @@ app.get("/health", (req, res) => {
 			next();
 		},
 		authMiddleware,
-		adminOnly,
 		accionesAsignacionRoutes
 	);
 })();

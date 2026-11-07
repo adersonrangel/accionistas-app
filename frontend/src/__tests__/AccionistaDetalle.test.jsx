@@ -245,7 +245,7 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		).toBeNull();
 	});
 
-	it("con sesión de usuario normal no muestra el tab Acciones", async () => {
+	it("con sesión de usuario normal muestra el tab Acciones en solo lectura", async () => {
 		vi.stubGlobal(
 			"localStorage",
 			setupLocalStorage({
@@ -253,12 +253,23 @@ describe("AccionistaDetalle - tab Acciones", () => {
 				app_user: JSON.stringify({ username: "normal", role: "user" }),
 			})
 		);
-		vi.stubGlobal("fetch", mockFetch());
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({ asignadas: [{ _id: "a1", code: "00001", percentage: 25 }] })
+		);
 		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
 
+		const user = userEvent.setup();
+		// El usuario normal SÍ ve el tab Acciones...
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+
+		// ...y ve las acciones asignadas.
+		expect(await screen.findByText("00001")).toBeTruthy();
+
+		// ...pero sin controles de escritura.
 		expect(
-			await screen.findByText("Accionista: Juan Perez")
-		).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "Acciones" })).toBeNull();
+			screen.queryByRole("button", { name: "+ Asignar acciones" })
+		).toBeNull();
+		expect(screen.queryByRole("button", { name: "Quitar" })).toBeNull();
 	});
 });
