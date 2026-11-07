@@ -82,3 +82,11 @@ Each slice: behavior + tests + this doc updated together where applicable.
 - **L1** (user verbatim, 2026-11-06): "Actualmente para ingresar al modulo de accionistas tenemos un login. Vamos a crear un modulo de administracion de usuarios. donde este usuario, administrador con permisos para todo y usuario normal con permisos para el modulo de accionistas. el login que ya tenemos lo colocamos como entrada unica al sistemas y actualizamos los permisos en los modulos de accionistas y acciones."
 - **L2** (decision, 2026-11-06, Ask): user chose "Accionistas CRUD + acciones admin-only" → normal user = accionistas CRUD only; acciones (CRUD + asignación) = admin-only; admin = everything.
 - **L3** (constraint, 2026-11-06): no `bcrypt` in deps → use Node built-in `crypto.scryptSync` for password hashing to avoid a new dependency. `jsonwebtoken` already present. Real server entry is `backend/src/app.js` (mirror changes in `app.ts`).
+- **L4** (commits, 2026-11-06): work-unit slices committed on `feat/user-management`.
+  - C1 `25b3e7e` — T1+T2: User model + seed + DB login + /me (backend).
+  - C2 `c7255eb` — T3+T4: users CRUD routes + mount + guard updates (app.ts/app.js).
+  - C3 `fd792fc` — T5: backend tests (auth, users CRUD, guards).
+  - C4 `662d396` — T6: frontend central login gate, role nav, logout.
+  - C5 `aaebc26` — T7+T8: UsersManager + strip embedded logins + auth headers + tab gating.
+  - C6 `411d644` — T9: frontend tests (login, app gating, UsersManager).
+  - Verification: backend 64/64 passing (5 files), frontend 120/120 passing (18 files).
