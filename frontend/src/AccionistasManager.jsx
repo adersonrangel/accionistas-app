@@ -5,7 +5,13 @@ import Pagination from "./Pagination.jsx";
 
 const API_URL = "http://localhost:3001/api/accionistas";
 
+function safeGetItem(key) {
+	try { return localStorage.getItem(key); } catch { return null; }
+}
+
 export default function AccionistasManager() {
+	const appToken = safeGetItem("app_token");
+	const authHeaders = appToken ? { Authorization: `Bearer ${appToken}` } : {};
 	const [accionistas, setAccionistas] = useState([]);
 	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(true);
@@ -25,7 +31,7 @@ export default function AccionistasManager() {
 				page: String(page),
 				pageSize: String(pageSize),
 			});
-			const res = await fetch(`${API_URL}?${params}`);
+			const res = await fetch(`${API_URL}?${params}`, { headers: authHeaders });
 			const json = await res.json();
 			setAccionistas(json.data || []);
 			setTotal(json.total || json.data.length);
@@ -72,7 +78,7 @@ export default function AccionistasManager() {
 		try {
 			const res = await fetch(url, {
 				method,
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", ...authHeaders },
 				body: JSON.stringify(payload),
 			});
 			const json = await res.json();
