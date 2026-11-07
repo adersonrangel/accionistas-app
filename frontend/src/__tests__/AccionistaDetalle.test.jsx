@@ -141,6 +141,87 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		expect(await screen.findByText("40 %")).toBeTruthy();
 	});
 
+	it("muestra las noches de beneficio en el listado de acciones asignada", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({
+				asignadas: [
+					{ _id: "a1", code: "00001", percentage: 25, nochesDeBeneficio: 3 },
+				],
+			})
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+
+		const tabla = await screen.findByRole("table");
+		expect(within(tabla).getByText("Noches de beneficio")).toBeTruthy();
+		expect(await within(tabla).findByText("3")).toBeTruthy();
+	});
+
+	it("muestra las noches de beneficio en el popup de asignación", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({
+				asignadas: [],
+				disponibles: [
+					{ _id: "a1", code: "00001", percentage: 40, nochesDeBeneficio: 4 },
+				],
+			})
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+		await user.click(
+			await screen.findByRole("button", { name: "+ Asignar acciones" })
+		);
+
+		const popup = await screen.findByRole("dialog");
+		expect(await within(popup).findByText("Noches de beneficio")).toBeTruthy();
+		expect(within(popup).getByText("4")).toBeTruthy();
+	});
+
+	it("card con total de noches de beneficio sumando las acciones asignadas", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({
+				asignadas: [
+					{ _id: "a1", code: "00001", percentage: 25, nochesDeBeneficio: 2 },
+					{ _id: "a2", code: "00002", percentage: 10, nochesDeBeneficio: 3 },
+				],
+			})
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+
+		expect(
+			await screen.findByRole("heading", { name: "Total de Noches de Beneficio" })
+		).toBeTruthy();
+		const total = await screen.findByTestId("total-noches-beneficio");
+		expect(total.textContent.trim()).toBe("5");
+	});
+
+	it("muestra guion y total cero cuando faltan las noches de beneficio", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({ asignadas: [{ _id: "a1", code: "00001", percentage: 25 }] })
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+
+		const tabla = await screen.findByRole("table");
+		expect(within(tabla).getByText("Noches de beneficio")).toBeTruthy();
+		expect(within(tabla).getByText("—")).toBeTruthy();
+		const total = await screen.findByTestId("total-noches-beneficio");
+		expect(total.textContent.trim()).toBe("0");
+	});
+
 	it("asigna 1 o varias acciones seleccionadas (POST lote)", async () => {
 		vi.stubGlobal(
 			"fetch",

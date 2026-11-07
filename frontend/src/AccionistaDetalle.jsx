@@ -58,6 +58,15 @@ function TabDatos({ accionista }) {
 	);
 }
 
+// Suma las noches de beneficio de una lista de acciones.
+// Ausente o null cuenta como 0.
+function sumarNochesDeBeneficio(acciones) {
+	return acciones.reduce(
+		(total, a) => total + (a.nochesDeBeneficio != null ? a.nochesDeBeneficio : 0),
+		0
+	);
+}
+
 // Modal para elegir 1 o varias acciones registradas sin asignar.
 function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, disponibles }) {
 	const [seleccion, setSeleccion] = useState([]);
@@ -100,6 +109,7 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 									<th></th>
 									<th>Código</th>
 									<th>Porcentaje</th>
+									<th>Noches de beneficio</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -115,6 +125,7 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 										</td>
 										<td>{a.code}</td>
 										<td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
+										<td>{a.nochesDeBeneficio != null ? a.nochesDeBeneficio : "—"}</td>
 									</tr>
 								))}
 							</tbody>
@@ -144,7 +155,7 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 // Tab "Acciones": detalle (por ahora el código) de las acciones asignadas,
 // con opción de quitarlas y de asignar acciones registradas (solo admin).
 // Para el rol normal es solo lectura: ve las asignadas, sin controles de escritura.
-function TabAcciones({ accionista, token, onMensaje, isAdmin }) {
+function TabAcciones({ accionista, token, onMensaje, isAdmin, onTotalNoches }) {
 	const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 	const [asignadas, setAsignadas] = useState([]);
 	const [cargando, setCargando] = useState(true);
@@ -166,6 +177,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin }) {
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.error || "Error cargando acciones");
 			setAsignadas(json.data || []);
+			onTotalNoches(sumarNochesDeBeneficio(json.data || []));
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -264,6 +276,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin }) {
 						<tr>
 							<th>Código</th>
 							<th>Porcentaje</th>
+							<th>Noches de beneficio</th>
 							{isAdmin && <th>Acciones</th>}
 						</tr>
 					</thead>
@@ -272,6 +285,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin }) {
 							<tr key={a._id}>
 								<td>{a.code}</td>
 								<td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
+								<td>{a.nochesDeBeneficio != null ? a.nochesDeBeneficio : "—"}</td>
 								{isAdmin && (
 									<td>
 										<button
@@ -311,6 +325,7 @@ function TabAcciones({ accionista, token, onMensaje, isAdmin }) {
 export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 	const [tab, setTab] = useState("datos");
 	const [mensaje, setMensaje] = useState("");
+	const [totalNoches, setTotalNoches] = useState(0);
 
 	const { token: appToken, user: currentUser } = getSession();
 	const isAdmin = currentUser.role === "admin";
@@ -339,6 +354,13 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 				</div>
 			)}
 
+			<section className="card">
+				<h2>Total de Noches de Beneficio</h2>
+				<p className="total-porcentaje" data-testid="total-noches-beneficio">
+					{totalNoches.toLocaleString("es-AR", { maximumFractionDigits: 2 })}
+				</p>
+			</section>
+
 			<nav className="detail-tabs">
 				<button
 					className={`btn ${tab === "datos" ? "btn-primary" : "btn-secondary"}`}
@@ -365,6 +387,7 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 						token={appToken}
 						isAdmin={isAdmin}
 						onMensaje={manejoMensaje}
+						onTotalNoches={setTotalNoches}
 					/>
 				) : (
 					<p className="text-muted">Sin acceso a acciones.</p>
