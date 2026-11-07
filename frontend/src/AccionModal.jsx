@@ -107,34 +107,39 @@ function AccionForm({ esEdicion, initialValues, onClose, onSave }) {
       <h2>{esEdicion ? "Editar Acción" : "Nueva Acción"}</h2>
       {serverError && <div className="alert alert-error">{serverError}</div>}
       <form onSubmit={handleSubmit(handleValidSubmit)} className="form-grid">
-        {esEdicion && (
-          <div className="field">
-            <label htmlFor="code">Código</label>
-            <input
-              id="code"
-              {...getFieldProps("code")}
-              required
-              maxLength={5}
-              aria-describedby={fieldErrors.code ? "code-error" : undefined}
-            />
-            {fieldErrors.code && (
-              <span id="code-error" role="alert" aria-live="polite">
-                {fieldErrors.code}
-              </span>
+        <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            {esEdicion ? (
+              <div className="field">
+                <label htmlFor="code">Código</label>
+                <input
+                  id="code"
+                  {...getFieldProps("code")}
+                  required
+                  maxLength={5}
+                  aria-describedby={fieldErrors.code ? "code-error" : undefined}
+                />
+                {fieldErrors.code && (
+                  <span id="code-error" role="alert" aria-live="polite">
+                    {fieldErrors.code}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted">
+                El código de la acción se generará automáticamente como el próximo
+                código secuencial de 5 dígitos.
+              </p>
             )}
           </div>
-        )}
-        {!esEdicion && (
-          <p className="text-muted">
-            El código de la acción se generará automáticamente como el próximo
-            código secuencial de 5 dígitos.
-          </p>
-        )}
-        <PercentageField getFieldProps={getFieldProps} fieldErrors={fieldErrors} />
-        <NochesDeBeneficioField
-          getFieldProps={getFieldProps}
-          fieldErrors={fieldErrors}
-        />
+          <div style={{ flex: 1 }}>
+            <PercentageField getFieldProps={getFieldProps} fieldErrors={fieldErrors} />
+            <NochesDeBeneficioField
+              getFieldProps={getFieldProps}
+              fieldErrors={fieldErrors}
+            />
+          </div>
+        </div>
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={guardando}>
             {guardando
