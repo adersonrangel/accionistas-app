@@ -292,7 +292,7 @@ describe("Asignacion de acciones a accionistas", () => {
 	});
 
 	describe("GET /api/acciones/disponibles", () => {
-		it("lista acciones registradas SIN asignar (auth, no exige admin)", async () => {
+		it("lista acciones registradas SIN asignar (admin)", async () => {
 			const acc = await crearAccionista("Juan");
 			const a1 = await crearAccion("00001");
 			const a2 = await crearAccion("00002");
@@ -305,7 +305,7 @@ describe("Asignacion de acciones a accionistas", () => {
 
 			const res = await request(app)
 				.get("/api/acciones/disponibles")
-				.set("Authorization", `Bearer ${nonAdminToken}`);
+				.set("Authorization", `Bearer ${adminToken}`);
 
 			expect(res.status).toBe(200);
 			const codes = res.body.data

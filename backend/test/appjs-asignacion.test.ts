@@ -66,7 +66,7 @@ describe("app.js (server real) asignacion", () => {
 	it("GET /api/acciones/disponibles existe (JSON 200)", async () => {
 		await Accion.create({ code: "00001", percentage: 10 });
 		const token = jwt.sign(
-			{ username: "u", role: "user" },
+			{ username: "u", role: "admin" },
 			SECRET,
 			{ expiresIn: "1h" }
 		);

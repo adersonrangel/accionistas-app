@@ -1,9 +1,11 @@
 import request from "supertest";
+import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import app from "../../src/app.ts";
-import { beforeAll, beforeEach } from "vitest";
+import { beforeAll, beforeEach, describe, it, expect } from "vitest";
 
 const COLLECTION = "accionistas";
+const JWT_SECRET = process.env.JWT_SECRET || "changeme-dev-secret";
 
 async function clearAccionistas() {
 	await mongoose.connection.db
@@ -30,6 +32,7 @@ const baseAccionista = {
 
 describe("Accionistas endpoints backed by MongoDB", () => {
 	let adminToken: string;
+	let userToken: string;
 
 	beforeAll(async () => {
 		const loginResponse = await request(app)
@@ -37,6 +40,12 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 			.set("Accept", "application/json")
 			.send({ username: "admin", password: "admin" });
 		adminToken = loginResponse.body.token;
+
+		userToken = jwt.sign(
+			{ username: "normal", role: "user" },
+			JWT_SECRET,
+			{ expiresIn: "1h" }
+		);
 	});
 
 	beforeEach(async () => {
@@ -58,6 +67,7 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const response = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 		expect(response.statusCode).toBe(201);
 		expect(response.body.data.porcentajeAcciones).toBe(0);
@@ -74,6 +84,7 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const response = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 		expect(response.statusCode).toBe(201);
 		expect(response.body.data.porcentajeAcciones).toBe(0);
@@ -83,6 +94,7 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const response = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ ...baseAccionista, porcentajeAcciones: 20 });
 		expect(response.statusCode).toBe(201);
 		expect(response.body.data.porcentajeAcciones).toBe(0);
@@ -92,9 +104,12 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 
-		const response = await request(app).get("/api/accionistas");
+		const response = await request(app)
+			.get("/api/accionistas")
+			.set("Authorization", `Bearer ${adminToken}`);
 		expect(response.statusCode).toBe(200);
 		expect(response.body.total).toBe(1);
 		expect(response.body.data).toHaveLength(1);
@@ -102,7 +117,9 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 	});
 
 	it("GET /:id returns 404 when the accionista does not exist", async () => {
-		const response = await request(app).get("/api/accionistas/99999");
+		const response = await request(app)
+			.get("/api/accionistas/99999")
+			.set("Authorization", `Bearer ${adminToken}`);
 		expect(response.statusCode).toBe(404);
 		expect(response.body.error).toBe("Accionista no encontrado");
 	});
@@ -112,6 +129,7 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const response = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(incompleto);
 		expect(response.statusCode).toBe(400);
 		expect(response.body.error).toBe("Faltan campos requeridos: dni");
@@ -121,12 +139,14 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const created = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 		const id = created.body.data.id;
 
 		const response = await request(app)
 			.put(`/api/accionistas/${id}`)
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ ...baseAccionista, apellido: "Torres Jr", id, porcentajeAcciones: 99 });
 		expect(response.statusCode).toBe(200);
 		expect(response.body.data.id).toBe(id);
@@ -138,13 +158,18 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const created = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 		const id = created.body.data.id;
 
-		const del = await request(app).delete(`/api/accionistas/${id}`);
+		const del = await request(app)
+			.delete(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`);
 		expect(del.statusCode).toBe(200);
 
-		const after = await request(app).get(`/api/accionistas/${id}`);
+		const after = await request(app)
+			.get(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`);
 		expect(after.statusCode).toBe(404);
 	});
 
@@ -152,6 +177,7 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const created = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 		const id = created.body.data.id;
 
@@ -164,11 +190,15 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 			.send({ accionIds: [a1._id, a2._id] });
 		expect(asignar.statusCode).toBe(200);
 
-		const one = await request(app).get(`/api/accionistas/${id}`);
+		const one = await request(app)
+			.get(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`);
 		expect(one.statusCode).toBe(200);
 		expect(one.body.data.porcentajeAcciones).toBe(55);
 
-		const list = await request(app).get("/api/accionistas");
+		const list = await request(app)
+			.get("/api/accionistas")
+			.set("Authorization", `Bearer ${adminToken}`);
 		expect(list.body.data[0].porcentajeAcciones).toBe(55);
 	});
 
@@ -176,6 +206,7 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		const created = await request(app)
 			.post("/api/accionistas")
 			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
 			.send(baseAccionista);
 		const id = created.body.data.id;
 
@@ -191,7 +222,10 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 			.delete(`/api/accionistas/${id}/acciones/${a2._id}`)
 			.set("Authorization", `Bearer ${adminToken}`);
 		expect(unassign.statusCode).toBe(200);
-		const afterUnassign = await request(app).get(`/api/accionistas/${id}`);
+		const afterUnassign = await request(app)
+			.get(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(afterUnassign.statusCode).toBe(200);
 		expect(afterUnassign.body.data.porcentajeAcciones).toBe(25);
 
 		// Editar el porcentaje de a1 (25 -> 40) -> total 40
@@ -200,7 +234,29 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ percentage: 40 });
 		expect(editAccion.statusCode).toBe(200);
-		const afterEdit = await request(app).get(`/api/accionistas/${id}`);
+		const afterEdit = await request(app)
+			.get(`/api/accionistas/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(afterEdit.statusCode).toBe(200);
 		expect(afterEdit.body.data.porcentajeAcciones).toBe(40);
+	});
+
+	it("returns 401 when no auth token is provided", async () => {
+		const response = await request(app).get("/api/accionistas");
+		expect(response.statusCode).toBe(401);
+	});
+
+	it("allows a normal user to read accionistas (any authenticated role)", async () => {
+		await request(app)
+			.post("/api/accionistas")
+			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send(baseAccionista);
+
+		const response = await request(app)
+			.get("/api/accionistas")
+			.set("Authorization", `Bearer ${userToken}`);
+		expect(response.statusCode).toBe(200);
+		expect(response.body.total).toBe(1);
 	});
 });
