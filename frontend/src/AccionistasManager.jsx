@@ -1,25 +1,34 @@
 import { useState, useEffect } from "react";
 import AccionistaModal from "./AccionistaModal.jsx";
 import AccionistaDetalle from "./AccionistaDetalle.jsx";
+import Pagination from "./Pagination.jsx";
 
 const API_URL = "http://localhost:3001/api/accionistas";
 
 export default function AccionistasManager() {
 	const [accionistas, setAccionistas] = useState([]);
+	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [mensaje, setMensaje] = useState("");
 	const [modalAbierto, setModalAbierto] = useState(false);
 	const [accionistaEditando, setAccionistaEditando] = useState(null);
 	const [accionistaDetallando, setAccionistaDetallando] = useState(null);
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 
 	async function cargarAccionistas() {
 		setLoading(true);
 		setError(null);
 		try {
-			const res = await fetch(API_URL);
+			const params = new URLSearchParams({
+				page: String(page),
+				pageSize: String(pageSize),
+			});
+			const res = await fetch(`${API_URL}?${params}`);
 			const json = await res.json();
 			setAccionistas(json.data || []);
+			setTotal(json.total || json.data.length);
 		} catch (err) {
 			console.error(err);
 			setError(
@@ -33,7 +42,7 @@ export default function AccionistasManager() {
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		cargarAccionistas();
-	}, []);
+	}, [page, pageSize]);
 
 	function abrirModalNuevo() {
 		setAccionistaEditando(null);
@@ -99,7 +108,7 @@ export default function AccionistasManager() {
 			});
 	}
 
-if (accionistaDetallando) {
+	if (accionistaDetallando) {
 		return (
 			<AccionistaDetalle
 				accionista={accionistaDetallando}
@@ -135,53 +144,65 @@ if (accionistaDetallando) {
 				) : accionistas.length === 0 ? (
 					<p className="text-muted">No hay accionistas registrados.</p>
 				) : (
-					<table className="table">
-						<thead>
-							<tr>
-								<th>ID</th>
-								<th>Nombre</th>
-								<th>Apellido</th>
-								<th>DNI</th>
-								<th>Email</th>
-								<th>% Acciones</th>
-								<th>Fecha Ingreso</th>
-								<th>Acciones</th>
-							</tr>
-						</thead>
-						<tbody>
-							{accionistas.map((a) => (
-								<tr key={a.id}>
-									<td>{a.id}</td>
-									<td>{a.nombre}</td>
-									<td>{a.apellido}</td>
-									<td>{a.dni}</td>
-									<td>{a.email}</td>
-									<td>{a.porcentajeAcciones}%</td>
-									<td>{a.fechaIngreso}</td>
-									<td>
-										<button
-											className="btn btn-small"
-											onClick={() => setAccionistaDetallando(a)}
-										>
-											Ver
-										</button>
-										<button
-											className="btn btn-small"
-											onClick={() => abrirModalEdicion(a)}
-										>
-											Editar
-										</button>
-										<button
-											className="btn btn-small btn-danger"
-											onClick={() => eliminar(a.id)}
-										>
-											Eliminar
-										</button>
-									</td>
+					<>
+						<table className="table">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Nombre</th>
+									<th>Apellido</th>
+									<th>DNI</th>
+									<th>Email</th>
+									<th>% Acciones</th>
+									<th>Fecha Ingreso</th>
+									<th>Acciones</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{accionistas.map((a) => (
+									<tr key={a.id}>
+										<td>{a.id}</td>
+										<td>{a.nombre}</td>
+										<td>{a.apellido}</td>
+										<td>{a.dni}</td>
+										<td>{a.email}</td>
+										<td>{a.porcentajeAcciones}%</td>
+										<td>{a.fechaIngreso}</td>
+										<td>
+											<button
+												className="btn btn-small"
+												onClick={() => setAccionistaDetallando(a)}
+											>
+												Ver
+											</button>
+											<button
+												className="btn btn-small"
+												onClick={() => abrirModalEdicion(a)}
+											>
+												Editar
+											</button>
+											<button
+												className="btn btn-small btn-danger"
+												onClick={() => eliminar(a.id)}
+											>
+												Eliminar
+											</button>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+						<Pagination
+							total={total}
+							page={page}
+							pageSize={pageSize}
+							onPageChange={setPage}
+							onPageSizeChange={(n) => {
+								setPageSize(n);
+								setPage(1);
+							}}
+						/>
+					</>
 				)}
 			</section>
 

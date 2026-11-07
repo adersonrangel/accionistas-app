@@ -21,11 +21,17 @@ async function nextCode() {
 	return String(updated.seq).padStart(5, '0');
 }
 
-// GET /api/acciones - list all
+// GET /api/acciones - listar todos con paginación
 router.get("/", async (req, res) => {
 	try {
-		const acciones = await Accion.find().sort({ code: 1 });
-		res.json({ data: acciones });
+		const page = parseInt(req.query.page) || 1;
+		const pageSize = parseInt(req.query.pageSize) || 10;
+		const skip = (page - 1) * pageSize;
+		const [acciones, total] = await Promise.all([
+			Accion.find().sort({ code: 1 }).skip(skip).limit(pageSize).exec(),
+			Accion.countDocuments(),
+		]);
+		res.json({ data: acciones, total });
 	} catch (err) {
 		res.status(500).json({ error: "Internal server error" });
 	}

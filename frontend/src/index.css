@@ -179,3 +179,24 @@ h2 {
 .text-muted {
   color: #6b7280;
 }
+
+/* Paginación */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-nav .btn-small[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

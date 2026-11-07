@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AccionModal from "./AccionModal.jsx";
+import Pagination from "./Pagination.jsx";
 
 const API_URL = "http://localhost:3001/api/acciones";
 const LOGIN_URL = "http://localhost:3001/api/login";
@@ -12,13 +13,16 @@ export default function AccionesManager() {
   const [iniciando, setIniciando] = useState(false);
 
   const [acciones, setAcciones] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [modalAbierto, setModalAbierto] = useState(false);
   const [accionEditando, setAccionEditando] = useState(null);
+  const [page, setPage] = useState(1);
+const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const [pageSize, setPageSize] = useState(10);
 
   async function iniciarSesion() {
     setIniciando(true);
@@ -54,7 +58,11 @@ export default function AccionesManager() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API_URL, { headers: authHeaders });
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      const res = await fetch(`${API_URL}?${params}`, { headers: authHeaders });
       if (res.status === 401) {
         cerrarSesion();
         return;
@@ -62,7 +70,8 @@ export default function AccionesManager() {
       if (!res.ok) throw new Error("Error cargando acciones");
       const json = await res.json();
       setAcciones(json.data || []);
-    } catch (err) {
+      setTotal(json.total || json.data.length);
+    } catch (_err) {
       setError(`No se pudo conectar con el backend. ¿Está corriendo en el puerto 3001?`);
     } finally {
       setLoading(false);
@@ -71,7 +80,7 @@ export default function AccionesManager() {
 
   useEffect(() => {
     if (token) cargarAcciones();
-  }, [token]);
+  }, [token, page, pageSize]);
 
   function abrirModalNuevo() {
     setAccionEditando(null);
@@ -252,6 +261,17 @@ export default function AccionesManager() {
           </table>
         )}
       </section>
+
+      <Pagination
+        total={total}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(n) => {
+          setPageSize(n);
+          setPage(1);
+        }}
+      />
 
       <AccionModal
         open={modalAbierto}

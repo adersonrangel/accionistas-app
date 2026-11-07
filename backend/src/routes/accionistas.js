@@ -2,11 +2,17 @@ const express = require("express");
 const router = express.Router();
 const model = require("../models/accionista");
 
-// GET /api/accionistas - listar todos
+// GET /api/accionistas - listar todos con paginación
 router.get("/", async (req, res) => {
   try {
-    const accionistas = await model.findAll();
-    res.json({ data: accionistas, total: accionistas.length });
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const skip = (page - 1) * pageSize;
+    const [accionistas, total] = await Promise.all([
+      model.Accionista.find().sort({ id: 1 }).skip(skip).limit(pageSize).lean(),
+      model.Accionista.countDocuments(),
+    ]);
+    res.json({ data: accionistas, total });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error interno del servidor" });
