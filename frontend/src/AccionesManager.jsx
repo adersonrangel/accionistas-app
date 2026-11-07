@@ -171,19 +171,21 @@ export default function AccionesManager() {
         </div>
       )}
 
-      <section className="card">
-        <h2>Total de Porcentajes</h2>
-        <p className="total-porcentaje" data-testid="total-porcentaje">
-          {totalPorcentaje.toLocaleString("es-AR", { maximumFractionDigits: 2 })} %
-        </p>
-      </section>
+      <div className="stats-row">
+        <section className="card">
+          <h2>Acciones registradas</h2>
+          <p className="total-porcentaje" data-testid="total-acciones">
+            {total}
+          </p>
+        </section>
 
-      <section className="card">
-        <h2>Acciones registradas</h2>
-        <p className="total-porcentaje" data-testid="total-acciones">
-          {total}
-        </p>
-      </section>
+        <section className="card">
+          <h2>Total de Porcentajes</h2>
+          <p className="total-porcentaje" data-testid="total-porcentaje">
+            {totalPorcentaje.toLocaleString("es-AR", { maximumFractionDigits: 2 })} %
+          </p>
+        </section>
+      </div>
 
       <section className="card">
         <h2>Listado de Acciones</h2>

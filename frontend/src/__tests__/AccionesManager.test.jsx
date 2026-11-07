@@ -68,6 +68,25 @@ describe("AccionesManager", () => {
 		expect(count.textContent).toBe("42");
 	});
 
+	it("muestra la card de acciones registradas primero, al lado de porcentajes", async () => {
+		const fetchMock = mockApi([ACCION], 42);
+		vi.stubGlobal("fetch", fetchMock);
+		render(<AccionesManager />);
+
+		const count = await screen.findByTestId("total-acciones");
+		const pct = screen.getByTestId("total-porcentaje");
+
+		const countCard = count.closest("section.card");
+		const pctCard = pct.closest("section.card");
+		// mismas filas de grid: contenedor común inmediato
+		expect(countCard.parentElement).toBe(pctCard.parentElement);
+		// la de cantidad va antes en el DOM
+		expect(
+			countCard.compareDocumentPosition(pctCard) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
 	it("pide confirmación en un popup antes de eliminar y envía DELETE al confirmar", async () => {
 		const fetchMock = mockApi([ACCION]);
 		vi.stubGlobal("fetch", fetchMock);
