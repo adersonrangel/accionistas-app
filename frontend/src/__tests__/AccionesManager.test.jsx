@@ -8,6 +8,7 @@ const ACCION = {
 	_id: "a1",
 	code: "AC-001",
 	percentage: "5",
+	nochesDeBeneficio: 7,
 	shareholderId: "Juan Perez",
 	createdAt: "2024-01-15",
 	updatedAt: "2024-01-15",

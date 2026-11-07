@@ -30,8 +30,9 @@ describe("Acciones Endpoints", () => {
 		await Counter.deleteMany({ _id: "accion_code" });
 	});
 
-	async function crear(percentage: unknown = null) {
+	async function crear(percentage: unknown = null, noches: unknown = 3) {
 		const body: any = percentage === null ? {} : { percentage };
+		if (noches !== null) body.nochesDeBeneficio = noches;
 		return request(app)
 			.post("/api/acciones")
 			.set("Authorization", `Bearer ${adminToken}`)
@@ -52,10 +53,11 @@ describe("Acciones Endpoints", () => {
 	});
 
 	it("POST /api/acciones creates action with auto-generated code 00001 and percentage", async () => {
-		const response = await crear(10);
+		const response = await crear(10, 7);
 		expect(response.statusCode).toBe(201);
 		expect(response.body.data.code).toBe("00001");
 		expect(response.body.data.percentage).toBe(10);
+		expect(response.body.data.nochesDeBeneficio).toBe(7);
 		expect(response.body.data._id).toBeDefined();
 		expect(typeof response.body.data._id).toBe("string");
 	});
@@ -92,6 +94,25 @@ describe("Acciones Endpoints", () => {
 
 	it("POST /api/acciones returns 400 for non-numeric percentage", async () => {
 		const response = await crear("abc");
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("POST /api/acciones creates action with default nochesDeBeneficio if not provided", async () => {
+		const response = await request(app)
+			.post("/api/acciones")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ percentage: 10 });
+		expect(response.statusCode).toBe(201);
+		expect(response.body.data.nochesDeBeneficio).toBe(0);
+	});
+
+	it("POST /api/acciones returns 400 for negative nochesDeBeneficio", async () => {
+		const response = await crear(10, -1);
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("POST /api/acciones returns 400 for non-integer nochesDeBeneficio", async () => {
+		const response = await crear(10, 2.5);
 		expect(response.statusCode).toBe(400);
 	});
 
@@ -170,6 +191,42 @@ describe("Acciones Endpoints", () => {
 			.put(`/api/acciones/${id}`)
 			.set("Authorization", `Bearer ${adminToken}`)
 			.send({ percentage: -1 });
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("PUT /api/acciones/:id updates only nochesDeBeneficio (code and percentage untouched)", async () => {
+		const createRes = await crear(10, 3);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ nochesDeBeneficio: 14 });
+		expect(response.statusCode).toBe(200);
+		expect(response.body.data.nochesDeBeneficio).toBe(14);
+		expect(response.body.data.code).toBe("00001");
+		expect(response.body.data.percentage).toBe(10);
+	});
+
+	it("PUT /api/acciones/:id rejects negative nochesDeBeneficio", async () => {
+		const createRes = await crear(10);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ nochesDeBeneficio: -3 });
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("PUT /api/acciones/:id rejects non-integer nochesDeBeneficio", async () => {
+		const createRes = await crear(10);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ nochesDeBeneficio: 2.5 });
 		expect(response.statusCode).toBe(400);
 	});
 

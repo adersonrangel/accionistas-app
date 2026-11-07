@@ -24,6 +24,15 @@ const accionSchema = new Schema(
 			ref: "Shareholder",
 			default: null,
 		},
+		nochesDeBeneficio: {
+			type: Number,
+			default: 0,
+			min: [0, "Noches de beneficio must be >= 0"],
+			validate: {
+				validator: (v: number) => Number.isInteger(v),
+				message: "Noches de beneficio must be a whole number",
+			},
+		},
 	},
 	{
 		timestamps: true,

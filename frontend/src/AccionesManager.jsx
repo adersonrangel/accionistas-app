@@ -192,6 +192,7 @@ export default function AccionesManager() {
               <tr>
                 <th>Código</th>
                 <th>Porcentaje</th>
+                <th>Noches de beneficio</th>
                 <th>ID (GUID)</th>
                 <th>Accionista</th>
                 <th>Creación</th>
@@ -204,6 +205,7 @@ export default function AccionesManager() {
                 <tr key={a._id}>
                   <td>{a.code}</td>
                   <td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
+                  <td>{a.nochesDeBeneficio != null ? a.nochesDeBeneficio : "—"}</td>
                   <td>{a._id ? a._id.substring(0, 8) + "..." : ""}</td>
                   <td>{a.shareholderId || "—"}</td>
                   <td>{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "—"}</td>

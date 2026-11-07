@@ -12,6 +12,15 @@ function isValidPercentage(v: unknown): boolean {
 	);
 }
 
+function isValidNochesDeBeneficio(v: unknown): boolean {
+	return (
+		typeof v === "number" &&
+		Number.isFinite(v) &&
+		Number.isInteger(v) &&
+		v >= 0
+	);
+}
+
 async function nextCode() {
 	const updated = await AccionCounter.findOneAndUpdate(
 		{ _id: "accion_code" },
@@ -82,14 +91,19 @@ router.get("/:id", async (req, res) => {
 // POST /api/acciones - create (admin only)
 router.post("/", adminOnly, async (req, res) => {
 	try {
-		const { percentage } = req.body ?? {};
+		const { percentage, nochesDeBeneficio } = req.body ?? {};
 		if (!isValidPercentage(percentage)) {
 			return res.status(400).json({
 				error: "Percentage must be a number between 0 and 100",
 			});
 		}
+		if (nochesDeBeneficio !== undefined && !isValidNochesDeBeneficio(nochesDeBeneficio)) {
+			return res.status(400).json({
+				error: "Noches de beneficio must be a whole number >= 0",
+			});
+		}
 		const code = await nextCode();
-		const newAccion = await Accion.create({ code, percentage });
+		const newAccion = await Accion.create({ code, percentage, ...(nochesDeBeneficio !== undefined ? { nochesDeBeneficio } : {}) });
 		res.status(201).json({ data: newAccion });
 	} catch (err: any) {
 		if (err.code === 11000 || err.status === 409) {
@@ -102,23 +116,24 @@ router.post("/", adminOnly, async (req, res) => {
 // PUT /api/acciones/:id - update code and/or percentage (admin only)
 router.put("/:id", adminOnly, async (req, res) => {
 	try {
-		const { code, percentage } = req.body ?? {};
+		const { code, percentage, nochesDeBeneficio } = req.body ?? {};
 
 		// Reject other fields
 		const otherKeys = Object.keys(req.body ?? {}).filter(
-			(k) => k !== "code" && k !== "percentage" && k !== "_id"
+			(k) => k !== "code" && k !== "percentage" && k !== "nochesDeBeneficio" && k !== "_id"
 		);
 		if (otherKeys.length > 0) {
 			return res.status(400).json({
-				error: "Only 'code' and 'percentage' can be edited",
+				error: "Only 'code', 'percentage' and 'nochesDeBeneficio' can be edited",
 			});
 		}
 
 		const hasCode = code !== undefined;
 		const hasPercentage = percentage !== undefined;
-		if (!hasCode && !hasPercentage) {
+		const hasNoches = nochesDeBeneficio !== undefined;
+		if (!hasCode && !hasPercentage && !hasNoches) {
 			return res.status(400).json({
-				error: "Provide 'code' and/or 'percentage'",
+				error: "Provide 'code', 'percentage' and/or 'nochesDeBeneficio'",
 			});
 		}
 
@@ -132,6 +147,12 @@ router.put("/:id", adminOnly, async (req, res) => {
 			});
 		}
 
+		if (hasNoches && !isValidNochesDeBeneficio(nochesDeBeneficio)) {
+			return res.status(400).json({
+				error: "Noches de beneficio must be a whole number >= 0",
+			});
+		}
+
 		const existing = await Accion.findById(req.params.id);
 		if (!existing) return res.status(404).json({ error: "Accion not found" });
 
@@ -140,9 +161,10 @@ router.put("/:id", adminOnly, async (req, res) => {
 			if (dup) return res.status(409).json({ error: "Code already in use" });
 		}
 
-		const update: { code?: string; percentage?: number } = {};
+		const update: { code?: string; percentage?: number; nochesDeBeneficio?: number } = {};
 		if (hasCode) update.code = code;
 		if (hasPercentage) update.percentage = percentage;
+		if (hasNoches) update.nochesDeBeneficio = nochesDeBeneficio;
 		const updated = await Accion.findByIdAndUpdate(req.params.id, update, {
 			new: true,
 			runValidators: false,

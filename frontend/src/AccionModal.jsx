@@ -10,6 +10,14 @@ const percentageRules = [
   },
 ];
 
+const nochesRules = [
+  {
+    type: "pattern",
+    params: { pattern: "^\\d+$" },
+    message: "Las noches de beneficio deben ser un número entero mayor o igual a 0",
+  },
+];
+
 function PercentageField({ getFieldProps, fieldErrors }) {
   return (
     <div className="field">
@@ -32,6 +40,29 @@ function PercentageField({ getFieldProps, fieldErrors }) {
   );
 }
 
+function NochesDeBeneficioField({ getFieldProps, fieldErrors }) {
+  return (
+    <div className="field">
+      <label htmlFor="nochesDeBeneficio">Noches de beneficio</label>
+      <input
+        id="nochesDeBeneficio"
+        type="number"
+        step="1"
+        min="0"
+        {...getFieldProps("nochesDeBeneficio")}
+        aria-describedby={
+          fieldErrors.nochesDeBeneficio ? "nochesDeBeneficio-error" : undefined
+        }
+      />
+      {fieldErrors.nochesDeBeneficio && (
+        <span id="nochesDeBeneficio-error" role="alert" aria-live="polite">
+          {fieldErrors.nochesDeBeneficio}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function AccionForm({ esEdicion, initialValues, onClose, onSave }) {
   const { getFieldProps, handleSubmit, fieldErrors } = useValidatedForm(
     initialValues,
@@ -46,15 +77,24 @@ function AccionForm({ esEdicion, initialValues, onClose, onSave }) {
             },
           ],
           percentage: percentageRules,
+          nochesDeBeneficio: nochesRules,
         }
-      : { percentage: percentageRules }
+      : { percentage: percentageRules, nochesDeBeneficio: nochesRules }
   );
   const [serverError, setServerError] = useState("");
   const [guardando, setGuardando] = useState(false);
 
   async function handleValidSubmit(values) {
     setGuardando(true);
-    const payload = { ...values, percentage: Number(values.percentage) };
+    const payload = {
+      ...values,
+      percentage: Number(values.percentage),
+    };
+    if (values.nochesDeBeneficio !== "" && values.nochesDeBeneficio != null) {
+      payload.nochesDeBeneficio = Number(values.nochesDeBeneficio);
+    } else {
+      delete payload.nochesDeBeneficio;
+    }
     const err = await onSave(payload, esEdicion);
     if (err) {
       setServerError(err);
@@ -91,6 +131,10 @@ function AccionForm({ esEdicion, initialValues, onClose, onSave }) {
           </p>
         )}
         <PercentageField getFieldProps={getFieldProps} fieldErrors={fieldErrors} />
+        <NochesDeBeneficioField
+          getFieldProps={getFieldProps}
+          fieldErrors={fieldErrors}
+        />
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={guardando}>
             {guardando
@@ -114,8 +158,12 @@ export default function AccionModal({ open, accion, onClose, onSave }) {
   const esEdicion = accion !== null;
   if (!open) return null;
   const initialValues = esEdicion
-    ? { code: accion.code, percentage: accion.percentage ?? "" }
-    : { percentage: "" };
+    ? {
+        code: accion.code,
+        percentage: accion.percentage ?? "",
+        nochesDeBeneficio: accion.nochesDeBeneficio ?? "",
+      }
+    : { percentage: "", nochesDeBeneficio: "" };
   return (
     <div
       className="modal-overlay"

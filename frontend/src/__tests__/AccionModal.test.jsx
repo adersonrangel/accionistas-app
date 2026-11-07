@@ -17,7 +17,7 @@ describe("AccionModal - Code Validation", () => {
     render(
       <AccionModal
         open={true}
-        accion={{ _id: "1", code: "00001", percentage: 10 }}
+        accion={{ _id: "1", code: "00001", percentage: 10, nochesDeBeneficio: 3 }}
         onClose={onClose}
         onSave={onSave}
       />
@@ -41,7 +41,7 @@ describe("AccionModal - Code Validation", () => {
     render(
       <AccionModal
         open={true}
-        accion={{ _id: "1", code: "00001", percentage: 10 }}
+        accion={{ _id: "1", code: "00001", percentage: 10, nochesDeBeneficio: 3 }}
         onClose={onClose}
         onSave={onSave}
       />
@@ -55,7 +55,7 @@ describe("AccionModal - Code Validation", () => {
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith(
-        { code: "00099", percentage: 10 },
+        { code: "00099", percentage: 10, nochesDeBeneficio: 3 },
         true
       );
     });
@@ -74,12 +74,63 @@ describe("AccionModal - Percentage", () => {
 
     const input = screen.getByLabelText("Porcentaje");
     await user.type(input, "25.5");
+    const nochesInput = screen.getByLabelText("Noches de beneficio");
+    await user.type(nochesInput, "5");
 
     await user.click(screen.getByRole("button", { name: /crear acción/i }));
 
     await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith({ percentage: 25.5 }, false);
+      expect(onSave).toHaveBeenCalledWith(
+        { percentage: 25.5, nochesDeBeneficio: 5 },
+        false
+      );
     });
+  });
+
+  it("creates with zero noches de beneficio", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(null);
+    const onClose = vi.fn();
+
+    render(
+      <AccionModal open={true} accion={null} onClose={onClose} onSave={onSave} />
+    );
+
+    await user.type(screen.getByLabelText("Porcentaje"), "10");
+    await user.type(screen.getByLabelText("Noches de beneficio"), "0");
+
+    await user.click(screen.getByRole("button", { name: /crear acción/i }));
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(
+        { percentage: 10, nochesDeBeneficio: 0 },
+        false
+      );
+    });
+  });
+
+
+
+  it("blocks creation with a non-integer noches de beneficio", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(null);
+    const onClose = vi.fn();
+
+    render(
+      <AccionModal open={true} accion={null} onClose={onClose} onSave={onSave} />
+    );
+
+    await user.type(screen.getByLabelText("Porcentaje"), "10");
+    await user.type(screen.getByLabelText("Noches de beneficio"), "2.5");
+
+    await user.click(screen.getByRole("button", { name: /crear acción/i }));
+
+    expect(
+      await screen.findByText(
+        "Las noches de beneficio deben ser un número entero mayor o igual a 0"
+      )
+    ).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it("blocks creation with an empty percentage", async () => {
@@ -105,7 +156,7 @@ describe("AccionModal - Percentage", () => {
     render(
       <AccionModal
         open={true}
-        accion={{ _id: "1", code: "00001", percentage: 10 }}
+        accion={{ _id: "1", code: "00001", percentage: 10, nochesDeBeneficio: 3 }}
         onClose={onClose}
         onSave={onSave}
       />
