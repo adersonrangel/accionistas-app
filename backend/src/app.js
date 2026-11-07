@@ -18,20 +18,38 @@ app.get("/health", (req, res) => {
 	app.use("/api", authRoutes);
 })();
 
-// API routes
-app.use("/api/accionistas", accionistasRoutes);
-
-// Acciones routes with auth guard
+// API routes: accionistas module requires an authenticated user
+// (any role: admin or normal user).
 (async () => {
 	const { default: authMiddleware } = await import(
 		"./middleware/auth.middleware.ts"
 	);
+	app.use("/api/accionistas", authMiddleware, accionistasRoutes);
+})();
+
+// Acciones routes: admin-only (module fully restricted).
+(async () => {
+	const { default: authMiddleware } = await import(
+		"./middleware/auth.middleware.ts"
+	);
+	const { default: adminOnly } = await import("./middleware/adminOnly.ts");
 	const { default: accionesRoutes } = await import("./routes/acciones.routes.ts");
 	app.use(
 		"/api/acciones",
 		authMiddleware,
+		adminOnly,
 		accionesRoutes,
 	);
+})();
+
+// User administration routes: admin-only.
+(async () => {
+	const { default: authMiddleware } = await import(
+		"./middleware/auth.middleware.ts"
+	);
+	const { default: adminOnly } = await import("./middleware/adminOnly.ts");
+	const { default: usersRoutes } = await import("./routes/users.routes.ts");
+	app.use("/api/users", authMiddleware, adminOnly, usersRoutes);
 })();
 
 // Assignment routes (auth + admin) nested under accionista.
