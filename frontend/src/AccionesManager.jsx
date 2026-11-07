@@ -179,6 +179,13 @@ export default function AccionesManager() {
       </section>
 
       <section className="card">
+        <h2>Acciones registradas</h2>
+        <p className="total-porcentaje" data-testid="total-acciones">
+          {total}
+        </p>
+      </section>
+
+      <section className="card">
         <h2>Listado de Acciones</h2>
         {loading ? (
           <p className="text-muted">Cargando...</p>

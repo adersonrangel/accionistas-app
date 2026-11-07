@@ -14,14 +14,16 @@ const ACCION = {
 	updatedAt: "2024-01-15",
 };
 
-function mockApi(acciones) {
+function mockApi(acciones, total = null) {
 	return vi.fn(async (url, opts = {}) => {
 		const method = (opts.method || "GET").toUpperCase();
 		if (url.includes("/acciones/total")) {
 			return { ok: true, status: 200, json: async () => ({ data: { totalPercentage: 5 } }) };
 		}
 		if (method === "GET") {
-			return { ok: true, status: 200, json: async () => ({ data: acciones }) };
+			const body = { data: acciones };
+			if (total !== null) body.total = total;
+			return { ok: true, status: 200, json: async () => body };
 		}
 		return { ok: true, status: 200, json: async () => ({ ok: true }) };
 	});
@@ -55,6 +57,15 @@ describe("AccionesManager", () => {
 		cleanup();
 		vi.unstubAllGlobals();
 		vi.restoreAllMocks();
+	});
+
+	it("muestra la cantidad de acciones registradas en una card", async () => {
+		const fetchMock = mockApi([ACCION], 42);
+		vi.stubGlobal("fetch", fetchMock);
+		render(<AccionesManager />);
+
+		const count = await screen.findByTestId("total-acciones");
+		expect(count.textContent).toBe("42");
 	});
 
 	it("pide confirmación en un popup antes de eliminar y envía DELETE al confirmar", async () => {
