@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "01-hero-login.html",
+  "handoffs": {
+    "01-hero-login.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-07T03:33:53.770Z",
+      "startedAt": "2026-11-07T03:34:05.211Z",
+      "implementedAt": "2026-11-07T03:36:04.580Z",
+      "note": "Implementado en React (Landing.jsx + Login integrado). Tests 122/122 y build OK.",
+      "previewUrl": "http://localhost:5173/"
+    }
+  }
+}

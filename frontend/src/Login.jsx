@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, bare = false }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,6 +37,49 @@ export default function Login({ onLogin }) {
     }
   };
 
+  const form = (
+    <form onSubmit={handleSubmit} className="form-grid">
+      <div className="field">
+        <label htmlFor="login-user">Usuario</label>
+        <input
+          id="login-user"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          disabled={isSubmitting}
+          required
+        />
+      </div>
+
+      <div className="field">
+        <label htmlFor="login-pass">Contraseña</label>
+        <input
+          id="login-pass"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isSubmitting}
+          required
+        />
+      </div>
+
+      <div className="form-actions">
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? "Ingresando..." : "Entrar"}
+        </button>
+      </div>
+    </form>
+  );
+
+  if (bare) {
+    return (
+      <>
+        {error && <div className="alert alert-error">{error}</div>}
+        {form}
+      </>
+    );
+  }
+
   return (
     <div className="container">
       <div className="card" style={{ maxWidth: "400px", margin: "0 auto" }}>
@@ -45,37 +88,7 @@ export default function Login({ onLogin }) {
 
         {error && <div className="alert alert-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="form-grid">
-          <div className="field">
-            <label htmlFor="login-user">Usuario</label>
-            <input
-              id="login-user"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="login-pass">Contraseña</label>
-            <input
-              id="login-pass"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
-          </div>
-
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? "Ingresando..." : "Entrar"}
-            </button>
-          </div>
-        </form>
+        {form}
       </div>
     </div>
   );

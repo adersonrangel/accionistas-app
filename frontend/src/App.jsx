@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import AccionistasManager from "./AccionistasManager";
 import AccionesManager from "./AccionesManager";
 import UsersManager from "./UsersManager";
-import Login from "./Login";
+import Landing from "./Landing";
 
 const API_URL = "http://localhost:3001/api";
 
@@ -102,7 +102,7 @@ function App() {
   }, [user, vista]);
 
   if (!token || !user) {
-    return <Login onLogin={handleLogin} />;
+    return <Landing onLogin={handleLogin} />;
   }
 
   const showAcciones = user.role === "admin";

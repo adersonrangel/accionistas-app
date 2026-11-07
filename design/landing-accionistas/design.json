@@ -1,0 +1,13 @@
+{
+  "title": "Landing page de accionistas (con login)",
+  "brief": "Landing page de estilo profesional para el sistema de administración de accionistas del hotel, con el login integrado en la misma página. Colores profesionales.",
+  "artboards": [
+    {
+      "file": "01-hero-login.html",
+      "title": "Hero navy con login integrado",
+      "tradeoff": "Confianza institucional con navy y dorado; el login vive en el hero, lo que prioriza el acceso directo sobre el contenido de venta",
+      "width": 1440,
+      "height": 1240
+    }
+  ]
+}

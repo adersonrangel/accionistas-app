@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accionistas · Hotel — Plataforma de gestión de accionistas</title>
+<style>
+  :root {
+    --navy-900: #081C31;
+    --navy-800: #0E2A47;
+    --navy-700: #16406A;
+    --gold-500: #D9B25C;
+    --gold-600: #C9A24B;
+    --ink: #334155;
+    --slate-600: #5B6B7F;
+    --line: #E2E8F0;
+    --bg: #F6F8FB;
+    --white: #FFFFFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: auto; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    a, button, input { transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease; }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--navy-800);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+  /* ---------- Header ---------- */
+  .site-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .brand-mark { width: 36px; height: 36px; border-radius: 8px; background: var(--navy-800); display: grid; place-items: center; flex: none; }
+  .brand-name { font-size: 17px; font-weight: 700; color: var(--navy-800); letter-spacing: -0.01em; }
+  .brand-name span { color: var(--slate-600); font-weight: 500; }
+  .main-nav { display: flex; align-items: center; gap: 28px; }
+  .main-nav a.nav-link {
+    color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 500;
+  }
+  .main-nav a.nav-link:hover { color: var(--navy-800); }
+  .btn-header {
+    background: var(--white); color: var(--navy-800); border: 1.5px solid var(--navy-800);
+    font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 8px; cursor: pointer; text-decoration: none;
+  }
+  .btn-header:hover { background: var(--navy-800); color: var(--white); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background-color: var(--navy-800);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M48 0H0v48' fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='1'/%3E%3C/svg%3E");
+    color: var(--white);
+    padding: 84px 0 96px;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.12fr 0.88fr; gap: 72px; align-items: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: var(--gold-500); font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 22px;
+  }
+  .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--gold-500); display: inline-block; }
+  .hero h1 {
+    font-size: 46px; line-height: 1.14; font-weight: 750; letter-spacing: -0.02em;
+    color: var(--white); margin-bottom: 20px;
+  }
+  .hero .lead { font-size: 18px; color: rgba(255,255,255,0.82); max-width: 540px; margin-bottom: 32px; }
+  .hero-bullets { list-style: none; display: grid; gap: 14px; margin-bottom: 38px; }
+  .hero-bullets li { display: flex; gap: 12px; align-items: flex-start; font-size: 15.5px; color: rgba(255,255,255,0.9); }
+  .hero-bullets .check { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(217,178,92,0.16); display: grid; place-items: center; margin-top: 1px; }
+  .cta-row { display: flex; gap: 14px; align-items: center; margin-bottom: 28px; }
+  .btn-primary {
+    background: var(--gold-600); color: var(--navy-900); border: none;
+    font-size: 15px; font-weight: 700; padding: 13px 28px; border-radius: 8px;
+    cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .btn-primary:hover { background: var(--gold-500); }
+  .btn-ghost {
+    background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,0.4);
+    font-size: 15px; font-weight: 600; padding: 12px 24px; border-radius: 8px;
+    cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--white); background: rgba(255,255,255,0.07); }
+  .trust-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip {
+    font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.78);
+    border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 5px 13px;
+  }
+
+  /* ---------- Login card ---------- */
+  .login-card {
+    background: var(--white); color: var(--ink);
+    border-radius: 14px; padding: 36px 34px 30px;
+    box-shadow: 0 24px 48px rgba(4,16,28,0.38);
+  }
+  .login-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .login-card h2 { font-size: 21px; font-weight: 700; color: var(--navy-800); letter-spacing: -0.01em; }
+  .login-sub { font-size: 13.5px; color: var(--slate-600); margin-bottom: 24px; }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--navy-800); margin-bottom: 7px; }
+  .field input {
+    width: 100%; font-size: 14.5px; color: var(--ink);
+    border: 1px solid #CBD5E1; border-radius: 8px; padding: 11px 13px;
+    background: var(--white);
+  }
+  .field input::placeholder { color: #64748B; }
+  .field input:focus-visible { outline: 2px solid var(--navy-800); outline-offset: 1px; border-color: var(--navy-800); }
+  .form-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 22px; font-size: 13px; }
+  .form-row label { display: flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 500; }
+  .form-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--navy-800); }
+  .form-row a { color: var(--navy-800); font-weight: 600; text-decoration: none; }
+  .form-row a:hover { text-decoration: underline; }
+  .btn-login {
+    width: 100%; background: var(--navy-800); color: var(--white); border: none;
+    font-size: 15px; font-weight: 700; padding: 13px; border-radius: 8px; cursor: pointer;
+  }
+  .btn-login:hover { background: var(--navy-700); }
+  .btn-login:disabled { opacity: .7; cursor: default; }
+  .form-error {
+    display: flex; gap: 8px; align-items: flex-start;
+    background: #FDF3F3; border: 1px solid #F2C9C9; color: #7F1D1D;
+    font-size: 13px; font-weight: 500; border-radius: 8px; padding: 10px 12px; margin-bottom: 18px;
+  }
+  .form-status {
+    background: #F1F8F3; border: 1px solid #BFE0CB; color: #14532D;
+    font-size: 13px; font-weight: 500; border-radius: 8px; padding: 10px 12px; margin-bottom: 18px;
+  }
+  .login-hint { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 16px; font-size: 12.5px; color: var(--slate-600); text-align: center; }
+  .login-hint strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Modules ---------- */
+  .modules { padding: 84px 0 88px; }
+  .section-head { max-width: 620px; margin-bottom: 44px; }
+  .section-head .kicker { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--navy-800); margin-bottom: 12px; }
+  .section-head h2 { font-size: 30px; font-weight: 750; color: var(--navy-800); letter-spacing: -0.015em; margin-bottom: 12px; }
+  .section-head p { font-size: 16px; color: var(--slate-600); }
+  .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .module-card {
+    background: var(--white); border: 1px solid var(--line); border-radius: 12px;
+    padding: 30px 28px; box-shadow: 0 1px 3px rgba(15,42,71,0.06);
+  }
+  .module-card:hover { box-shadow: 0 10px 24px rgba(15,42,71,0.10); }
+  .module-icon {
+    width: 46px; height: 46px; border-radius: 10px; background: var(--navy-800);
+    display: grid; place-items: center; margin-bottom: 20px;
+  }
+  .module-card h3 { font-size: 17.5px; font-weight: 700; color: var(--navy-800); margin-bottom: 10px; }
+  .module-card p { font-size: 14.5px; color: var(--slate-600); }
+  .module-card .detail {
+    margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line);
+    font-size: 13px; color: var(--ink); font-weight: 500;
+  }
+
+  /* ---------- Footer ---------- */
+  .site-footer { background: var(--navy-900); color: rgba(255,255,255,0.66); padding: 34px 0; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+  .footer-inner .tech { display: flex; gap: 18px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="#top" aria-label="Accionistas Hotel — inicio">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="3" y="10" width="14" height="3" rx="1" fill="#D9B25C"/>
+          <rect x="5" y="5.5" width="10" height="3" rx="1" fill="#FFFFFF"/>
+          <rect x="7" y="1" width="6" height="3" rx="1" fill="#D9B25C"/>
+        </svg>
+      </span>
+      <span class="brand-name">Accionistas <span>· Hotel</span></span>
+    </a>
+    <nav class="main-nav" aria-label="Navegación principal">
+      <a class="nav-link" href="#modulos">Módulos</a>
+      <a class="nav-link" href="#seguridad">Seguridad</a>
+      <a class="btn-header" href="#login">Iniciar sesión</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ============ HERO + LOGIN ============ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container hero-grid">
+
+      <div>
+        <p class="eyebrow">Plataforma de gestión hotelera</p>
+        <h1 id="hero-title">Toda la propiedad de tu hotel, en un solo lugar</h1>
+        <p class="lead">Gestión de accionistas, acciones y permisos de acceso desde un único sistema: sin hojas de cálculo, sin datos dispersos, sin versiones que no coinciden.</p>
+
+        <ul class="hero-bullets">
+          <li>
+            <span class="check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.2 4.8 9 10 3.4" stroke="#D9B25C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Fichas completas de cada accionista con su historial de acciones
+          </li>
+          <li>
+            <span class="check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.2 4.8 9 10 3.4" stroke="#D9B25C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Acciones con número único, porcentaje y fecha de adquisición
+          </li>
+          <li>
+            <span class="check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.2 4.8 9 10 3.4" stroke="#D9B25C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Login único con roles: admin y usuario, cada uno con lo que necesita
+          </li>
+        </ul>
+
+        <div class="cta-row">
+          <a class="btn-primary" href="#login">Comenzar ahora</a>
+          <a class="btn-ghost" href="#modulos">Ver módulos</a>
+        </div>
+
+        <div class="trust-row" aria-label="Características de la plataforma">
+          <span class="chip">Acceso con roles</span>
+          <span class="chip">Sin hojas de cálculo</span>
+          <span class="chip">Datos centralizados</span>
+        </div>
+      </div>
+
+      <!-- Login -->
+      <div class="login-card" id="login">
+        <div class="login-card-head">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="3" y="10" width="14" height="3" rx="1" fill="#D9B25C"/>
+              <rect x="5" y="5.5" width="10" height="3" rx="1" fill="#0E2A47"/>
+              <rect x="7" y="1" width="6" height="3" rx="1" fill="#D9B25C"/>
+            </svg>
+          </span>
+          <h2>Iniciar sesión</h2>
+        </div>
+        <p class="login-sub">Acceso único al sistema. Su rol define los módulos disponibles.</p>
+
+        <p class="form-error" id="login-error" hidden role="alert">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex:none; margin-top:2px;" aria-hidden="true"><circle cx="7" cy="7" r="6" stroke="#7F1D1D" stroke-width="1.6"/><path d="M7 4v3.4M7 9.6v.4" stroke="#7F1D1D" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Ingrese usuario y contraseña para continuar.
+        </p>
+        <p class="form-status" id="login-status" hidden role="status"></p>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="username">Usuario</label>
+            <input type="text" id="username" name="username" placeholder="p. ej. m.gonzalez" autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="form-row">
+            <label for="remember"><input type="checkbox" id="remember" name="remember" checked> Mantener la sesión iniciada</label>
+            <a href="#login">¿Olvidó su contraseña?</a>
+          </div>
+          <button class="btn-login" type="submit" id="login-btn">Ingresar</button>
+        </form>
+
+        <p class="login-hint"><strong>¿Es su primer acceso?</strong><br>Solicite credenciales al administrador del hotel.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ MODULES ============ -->
+  <section class="modules" id="modulos" aria-labelledby="modules-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">Módulos del sistema</p>
+        <h2 id="modules-title">Todo lo que gestiona el hotel, organizado</h2>
+        <p>Cada módulo está separado por responsabilidad y protegido por su rol. Lo que necesita lo ve de inmediato; lo demás, no.</p>
+      </div>
+
+      <div class="module-grid">
+        <article class="module-card">
+          <span class="module-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7.5" r="3.6" stroke="#D9B25C" stroke-width="1.8"/><path d="M3.5 18.5c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" stroke="#D9B25C" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          <h3>Accionistas</h3>
+          <p>Alta, consulta y baja de accionistas. Toda la información de cada socio en una sola ficha, siempre actualizada.</p>
+          <p class="detail">Disponible para admin y usuario</p>
+        </article>
+
+        <article class="module-card">
+          <span class="module-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2.5A8.5 8.5 0 1 0 19.5 11H11V2.5Z" stroke="#D9B25C" stroke-width="1.8" stroke-linejoin="round"/><path d="M12.8 5.6A6 6 0 0 1 16.4 9.2h-3.6V5.6Z" fill="#D9B25C"/></svg>
+          </span>
+          <h3>Acciones</h3>
+          <p>Cada acción registra número único, porcentaje y fecha de adquisición. Asignación y transferencias con control total.</p>
+          <p class="detail">Exclusivo de admin</p>
+        </article>
+
+        <article class="module-card" id="seguridad">
+          <span class="module-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2.2 4 5v5.4c0 4.4 3 7.7 7 9.4 4-1.7 7-5 7-9.4V5l-7-2.8Z" stroke="#D9B25C" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 11l2.2 2.2L14.4 9" stroke="#D9B25C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <h3>Seguridad</h3>
+          <p>Login único al sistema con sesión protegida. El rol del usuario — admin o usuario — define qué módulos puede ver.</p>
+          <p class="detail">Roles admin y usuario</p>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p>© 2026 Accionistas · Hotel — Sistema interno de gestión de accionistas</p>
+    <p class="tech"><span>API REST /api/v1</span><span>React</span><span>Node.js</span><span>MongoDB</span></p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var form = document.getElementById('login-form');
+    var error = document.getElementById('login-error');
+    var status = document.getElementById('login-status');
+    var btn = document.getElementById('login-btn');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var user = form.username.value.trim();
+      var pass = form.password.value;
+      if (!user || !pass) {
+        error.hidden = false;
+        status.hidden = true;
+        return;
+      }
+      error.hidden = true;
+      status.hidden = true;
+      btn.disabled = true;
+      btn.textContent = 'Verificando…';
+      setTimeout(function () {
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+        status.textContent = 'Sesión iniciada — vista de demostración.';
+        status.hidden = false;
+      }, 700);
+    });
+  })();
+</script>
+
+</body>
+</html>

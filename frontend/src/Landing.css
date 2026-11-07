@@ -1,0 +1,419 @@
+/* Landing page — paleta navy/dorado (artboard design/landing-accionistas/01-hero-login.html) */
+.lg-root {
+  --lg-navy-900: #081c31;
+  --lg-navy-800: #0e2a47;
+  --lg-navy-700: #16406a;
+  --lg-gold-500: #d9b25c;
+  --lg-gold-600: #c9a24b;
+  --lg-ink: #334155;
+  --lg-slate: #5b6b7f;
+  --lg-line: #e2e8f0;
+  --lg-bg: #f6f8fb;
+  background: var(--lg-bg);
+  color: var(--lg-ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.lg-root) {
+    scroll-behavior: smooth;
+  }
+}
+
+.lg-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ---------- Header ---------- */
+.lg-header {
+  background: #fff;
+  border-bottom: 1px solid var(--lg-line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.lg-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+.lg-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.lg-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.lg-brand-mark.lg-on-white {
+  background: var(--lg-navy-800);
+  color: #fff;
+}
+.lg-brand-mark.lg-on-dark {
+  background: #fff;
+  color: var(--lg-navy-800);
+}
+.lg-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--lg-navy-800);
+  letter-spacing: -0.01em;
+}
+.lg-brand-name span {
+  color: var(--lg-slate);
+  font-weight: 500;
+}
+.lg-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.lg-nav-link {
+  color: var(--lg-ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+.lg-nav-link:hover {
+  color: var(--lg-navy-800);
+}
+.lg-btn-header {
+  background: #fff;
+  color: var(--lg-navy-800);
+  border: 1.5px solid var(--lg-navy-800);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.lg-btn-header:hover {
+  background: var(--lg-navy-800);
+  color: #fff;
+}
+
+/* ---------- Hero ---------- */
+.lg-hero {
+  background-color: var(--lg-navy-800);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M48 0H0v48' fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='1'/%3E%3C/svg%3E");
+  color: #fff;
+  padding: 84px 0 96px;
+}
+.lg-hero-grid {
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 72px;
+  align-items: center;
+}
+.lg-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--lg-gold-500);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin: 0 0 22px;
+}
+.lg-eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 2px;
+  background: var(--lg-gold-500);
+  display: inline-block;
+}
+.lg-hero h1 {
+  font-size: 46px;
+  line-height: 1.14;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin: 0 0 20px;
+}
+.lg-lead {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 540px;
+  margin: 0 0 32px;
+}
+.lg-bullets {
+  list-style: none;
+  display: grid;
+  gap: 14px;
+  margin: 0 0 38px;
+  padding: 0;
+}
+.lg-bullets li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 15.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+.lg-check {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(217, 178, 92, 0.16);
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+}
+.lg-cta-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.lg-btn-primary {
+  background: var(--lg-gold-600);
+  color: var(--lg-navy-900);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+.lg-btn-primary:hover {
+  background: var(--lg-gold-500);
+}
+.lg-btn-ghost {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+.lg-btn-ghost:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+}
+.lg-trust-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lg-chip {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 5px 13px;
+}
+
+/* ---------- Login card ---------- */
+.lg-login-card {
+  background: #fff;
+  color: var(--lg-ink);
+  border-radius: 14px;
+  padding: 36px 34px 30px;
+  box-shadow: 0 24px 48px rgba(4, 16, 28, 0.38);
+  scroll-margin-top: 88px;
+}
+.lg-login-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.lg-login-head h2 {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--lg-navy-800);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.lg-login-sub {
+  font-size: 13.5px;
+  color: var(--lg-slate);
+  margin: 0 0 24px;
+}
+.lg-login-hint {
+  border-top: 1px solid var(--lg-line);
+  margin: 22px 0 0;
+  padding-top: 16px;
+  font-size: 12.5px;
+  color: var(--lg-slate);
+  text-align: center;
+}
+.lg-login-hint strong {
+  color: var(--lg-ink);
+  font-weight: 600;
+}
+
+/* Login integrado (componente Login en modo bare): ajustar al tema de la tarjeta */
+.lg-login-card .form-grid {
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+.lg-login-card .field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lg-navy-800);
+  margin-bottom: 7px;
+}
+.lg-login-card .field input {
+  padding: 11px 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14.5px;
+}
+.lg-login-card .field input:focus {
+  outline: 2px solid var(--lg-navy-800);
+  outline-offset: 1px;
+  border-color: var(--lg-navy-800);
+}
+.lg-login-card .form-actions {
+  margin-top: 4px;
+}
+.lg-login-card .form-actions .btn-primary {
+  width: 100%;
+  background: var(--lg-navy-800);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px;
+  border-radius: 8px;
+}
+.lg-login-card .form-actions .btn-primary:hover {
+  background: var(--lg-navy-700);
+}
+.lg-login-card .form-actions .btn-primary:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+.lg-login-card .alert-error {
+  background: #fdf3f3;
+  color: #7f1d1d;
+  border: 1px solid #f2c9c9;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* ---------- Módulos ---------- */
+.lg-modules {
+  padding: 84px 0 88px;
+}
+.lg-section-head {
+  max-width: 620px;
+  margin-bottom: 44px;
+}
+.lg-kicker {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--lg-navy-800);
+  margin: 0 0 12px;
+}
+.lg-section-head h2 {
+  font-size: 30px;
+  font-weight: 750;
+  color: var(--lg-navy-800);
+  letter-spacing: -0.015em;
+  margin: 0 0 12px;
+}
+.lg-section-head p {
+  font-size: 16px;
+  color: var(--lg-slate);
+  margin: 0;
+}
+.lg-module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.lg-module-card {
+  background: #fff;
+  border: 1px solid var(--lg-line);
+  border-radius: 12px;
+  padding: 30px 28px;
+  box-shadow: 0 1px 3px rgba(15, 42, 71, 0.06);
+}
+.lg-module-card:hover {
+  box-shadow: 0 10px 24px rgba(15, 42, 71, 0.1);
+}
+.lg-module-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: var(--lg-navy-800);
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+}
+.lg-module-card h3 {
+  font-size: 17.5px;
+  font-weight: 700;
+  color: var(--lg-navy-800);
+  margin: 0 0 10px;
+}
+.lg-module-card p {
+  font-size: 14.5px;
+  color: var(--lg-slate);
+  margin: 0;
+}
+.lg-module-card .lg-module-detail {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--lg-line);
+  font-size: 13px;
+  color: var(--lg-ink);
+  font-weight: 500;
+}
+
+/* ---------- Footer ---------- */
+.lg-footer {
+  background: var(--lg-navy-900);
+  color: rgba(255, 255, 255, 0.66);
+  padding: 34px 0;
+}
+.lg-footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.lg-footer-tech {
+  display: flex;
+  gap: 18px;
+  margin: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 980px) {
+  .lg-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .lg-hero h1 {
+    font-size: 34px;
+  }
+  .lg-module-grid {
+    grid-template-columns: 1fr;
+  }
+  .lg-container {
+    padding: 0 24px;
+  }
+}
