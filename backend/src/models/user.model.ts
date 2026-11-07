@@ -1,4 +1,5 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 import crypto from "crypto";
 
 const userSchema = new Schema(
@@ -21,7 +22,7 @@ const userSchema = new Schema(
 	{ timestamps: true }
 );
 
-const User = models.User || model("User", userSchema);
+const User = mongoose.models.User || model("User", userSchema);
 
 const SALT_BYTES = 16;
 const KEY_BYTES = 64;
