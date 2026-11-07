@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import UsersManager from "../UsersManager";
 
@@ -47,7 +47,6 @@ describe("UsersManager", () => {
   beforeEach(() => {
     user = userEvent.setup();
     vi.stubGlobal("localStorage", setupLocalStorage({ app_token: TOKEN }));
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
   });
 
   afterEach(() => {
@@ -149,7 +148,7 @@ describe("UsersManager", () => {
     expect(screen.getByText("Usuario actualizado correctamente")).toBeTruthy();
   });
 
-  it("elimina un usuario (DELETE /api/users/:id) con confirmación", async () => {
+  it("elimina un usuario (DELETE /api/users/:id) con confirmación en popup", async () => {
     const fetchMock = mockApi();
     vi.stubGlobal("fetch", fetchMock);
     render(<UsersManager />);
@@ -159,6 +158,15 @@ describe("UsersManager", () => {
     const botones = fila.querySelectorAll("button");
     await user.click(botones[botones.length - 1]); // último botón: Eliminar
 
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeTruthy();
+    expect(screen.getByText("¿Estás seguro de eliminar a juan?")).toBeTruthy();
+    expect(
+      fetchMock.mock.calls.filter(([, opts]) => opts?.method === "DELETE")
+    ).toHaveLength(0);
+
+    await user.click(within(dialog).getByRole("button", { name: /eliminar/i }));
+
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
         `${API_URL}/u2`,
@@ -166,7 +174,6 @@ describe("UsersManager", () => {
       )
     );
     expect(await screen.findByText("Usuario eliminado correctamente")).toBeTruthy();
-    expect(globalThis.confirm).toHaveBeenCalled();
   });
 
   it("muestra el error de eliminación cuando es el último admin", async () => {
@@ -190,6 +197,9 @@ describe("UsersManager", () => {
     const fila = screen.getByText("admin").closest("tr");
     const botones = fila.querySelectorAll("button");
     await user.click(botones[botones.length - 1]);
+
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /eliminar/i }));
 
     expect(
       await screen.findByText("Error: No se puede eliminar el último administrador")

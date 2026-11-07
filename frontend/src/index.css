@@ -1,10 +1,27 @@
-/** Reset básico y estilos simples para el prototipo */
-html, body {
+/**
+ * Estilos base de la app.
+ * Tokens compartidos con la landing (design/landing-accionistas):
+ * navy institucional + dorado de acento.
+ */
+:root {
+  --navy-900: #081c31;
+  --navy-800: #0e2a47;
+  --navy-700: #16406a;
+  --gold-500: #d9b25c;
+  --gold-600: #c9a24b;
+  --ink: #334155;
+  --slate: #5b6b7f;
+  --line: #e2e8f0;
+  --bg: #f6f8fb;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #f4f6f8;
-  color: #222;
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .container {
@@ -15,7 +32,18 @@ html, body {
 
 h1 {
   margin-top: 0;
-  font-size: 28px;
+  font-size: 30px;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  color: var(--navy-800);
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy-800);
+  margin-bottom: 18px;
 }
 
 .page-header {
@@ -26,6 +54,58 @@ h1 {
   flex-wrap: wrap;
 }
 
+/* ---------- Header de la app (shell) ---------- */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--navy-800);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.app-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy-800);
+  letter-spacing: -0.01em;
+}
+.app-brand-name span {
+  color: var(--slate);
+  font-weight: 500;
+}
+.app-tabs {
+  display: flex;
+  gap: 10px;
+}
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ---------- Modales ---------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -56,20 +136,23 @@ h1 {
   }
 }
 
-h2 {
-  margin-top: 0;
-  font-size: 20px;
-  margin-bottom: 18px;
-}
-
 .card {
   background: #fff;
-  border-radius: 10px;
-  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(15, 42, 71, 0.06);
 }
 
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* ---------- Formularios ---------- */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -85,19 +168,24 @@ h2 {
   font-weight: 600;
   margin-bottom: 6px;
   font-size: 13px;
-  color: #444;
+  color: var(--navy-800);
 }
 
-.field input {
-  padding: 8px 10px;
-  border: 1px solid #ccd0d5;
-  border-radius: 6px;
+.field input,
+.field select {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
   font-size: 14px;
+  background: #fff;
+  color: var(--ink);
 }
 
-.field input:focus {
-  outline: none;
-  border-color: #4f8cff;
+.field input:focus,
+.field select:focus {
+  outline: 2px solid var(--navy-800);
+  outline-offset: 1px;
+  border-color: var(--navy-800);
 }
 
 .form-actions {
@@ -107,23 +195,46 @@ h2 {
   align-items: center;
 }
 
+.confirm-message {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--slate);
+}
+
+/* ---------- Botones ---------- */
 .btn {
   padding: 9px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
 }
 
+.btn:focus-visible {
+  outline: 2px solid var(--navy-800);
+  outline-offset: 2px;
+}
+
 .btn-primary {
-  background: #2563eb;
+  background: var(--navy-800);
   color: #fff;
 }
 
+.btn-primary:hover {
+  background: var(--navy-700);
+}
+
 .btn-secondary {
-  background: #e5e7eb;
-  color: #374151;
+  background: #e9eef4;
+  color: var(--ink);
+  border: 1px solid #d5dde6;
+}
+
+.btn-secondary:hover {
+  background: #fff;
+  border-color: var(--navy-800);
+  color: var(--navy-800);
 }
 
 .btn-danger {
@@ -135,11 +246,38 @@ h2 {
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 600;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  color: var(--ink);
 }
 
+.btn-small:hover {
+  border-color: var(--navy-800);
+  color: var(--navy-800);
+}
+
+.btn-small[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Acción destructiva en filas: rojo discreto, no bloque sólido */
+.btn-small.btn-danger {
+  background: #fdf3f3;
+  color: #b91c1c;
+  border: 1px solid #f2c9c9;
+}
+
+.btn-small.btn-danger:hover {
+  background: #fbe3e3;
+  color: #7f1d1d;
+  border-color: #e8b4b4;
+}
+
+/* ---------- Alertas ---------- */
 .alert {
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 14px;
   font-weight: 500;
 }
@@ -154,33 +292,81 @@ h2 {
   color: #991b1b;
 }
 
+/* ---------- Tablas ---------- */
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   text-align: left;
   padding: 10px 8px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--line);
 }
 
 .table th {
   background: #f8fafc;
   font-weight: 700;
-  color: #4b5563;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
 }
 
 .table tbody tr:hover {
-  background: #f9fafb;
+  background: #f9fafc;
 }
 
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.badge-admin {
+  background: rgba(201, 162, 75, 0.18);
+  color: #7a5e17;
+  border: 1px solid rgba(201, 162, 75, 0.45);
+}
+
+.badge-user {
+  background: #eef2f7;
+  color: #475569;
+  border: 1px solid #d7dee8;
+}
+
+/* ---------- Detalle de accionista ---------- */
+.detail-actions {
+  margin-bottom: 12px;
+}
+
+.detail-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ---------- Muestras ---------- */
 .text-muted {
-  color: #6b7280;
+  color: var(--slate);
 }
 
-/* Paginación */
+.total-porcentaje {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--navy-800);
+  margin: 4px 0 0;
+}
+
+/* ---------- Paginación ---------- */
 .pagination {
   display: flex;
   justify-content: space-between;
@@ -188,6 +374,35 @@ h2 {
   margin-top: 16px;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.pagination-size-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-size-row label {
+  margin: 0;
+}
+
+.pagination-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.pagination-select:focus {
+  outline: 2px solid var(--navy-800);
+  outline-offset: 1px;
+}
+
+.pagination-note {
+  font-size: 13px;
 }
 
 .pagination-nav {
@@ -199,4 +414,11 @@ h2 {
 .pagination-nav .btn-small[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.page-current {
+  background: var(--navy-800) !important;
+  border-color: var(--navy-800) !important;
+  color: #fff !important;
+  cursor: default;
 }

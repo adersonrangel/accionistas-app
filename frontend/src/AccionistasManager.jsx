@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AccionistaModal from "./AccionistaModal.jsx";
 import AccionistaDetalle from "./AccionistaDetalle.jsx";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 import Pagination from "./Pagination.jsx";
 
 const API_URL = "http://localhost:3001/api/accionistas";
@@ -20,6 +21,7 @@ export default function AccionistasManager() {
 	const [modalAbierto, setModalAbierto] = useState(false);
 	const [accionistaEditando, setAccionistaEditando] = useState(null);
 	const [accionistaDetallando, setAccionistaDetallando] = useState(null);
+	const [eliminandoId, setEliminandoId] = useState(null);
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
 
@@ -98,23 +100,24 @@ export default function AccionistasManager() {
 		}
 	}
 
-	function eliminar(id) {
-		if (!confirm("¿Estás seguro de eliminar este accionista?")) return;
-		fetch(`${API_URL}/${id}`, { method: "DELETE" })
-			.then(async (res) => {
-				const json = await res.json();
-				if (!res.ok) {
-					throw new Error(json.error || "No se pudo eliminar");
-				}
-				return json;
-			})
-			.then(() => {
-				setMensaje("Accionista eliminado correctamente");
-				cargarAccionistas();
-			})
-			.catch((err) => {
-				setMensaje(`Error de conexión al eliminar: ${err.message}`);
-			});
+	function solicitarEliminar(id) {
+		setEliminandoId(id);
+	}
+
+	async function confirmarEliminar() {
+		const id = eliminandoId;
+		setEliminandoId(null);
+		try {
+			const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+			const json = await res.json();
+			if (!res.ok) {
+				throw new Error(json.error || "No se pudo eliminar");
+			}
+			setMensaje("Accionista eliminado correctamente");
+			cargarAccionistas();
+		} catch (err) {
+			setMensaje(`Error de conexión al eliminar: ${err.message}`);
+		}
 	}
 
 	if (accionistaDetallando) {
@@ -192,7 +195,7 @@ export default function AccionistasManager() {
 											</button>
 											<button
 												className="btn btn-small btn-danger"
-												onClick={() => eliminar(a.id)}
+												onClick={() => solicitarEliminar(a.id)}
 											>
 												Eliminar
 											</button>
@@ -220,6 +223,14 @@ export default function AccionistasManager() {
 				accionista={accionistaEditando}
 				onClose={cerrarModal}
 				onSave={guardarAccionista}
+			/>
+
+			<ConfirmDialog
+				open={eliminandoId !== null}
+				title="Eliminar accionista"
+				message="¿Estás seguro de eliminar este accionista?"
+				onConfirm={confirmarEliminar}
+				onCancel={() => setEliminandoId(null)}
 			/>
 		</div>
 	);

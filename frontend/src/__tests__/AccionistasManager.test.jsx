@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AccionistasManager from "../AccionistasManager";
 
@@ -168,5 +168,52 @@ describe("AccionistasManager con popup de alta/edición", () => {
 			([, opts]) => opts?.method === "POST" || opts?.method === "PUT"
 		);
 		expect(sendCalls).toHaveLength(0);
+	});
+
+	it("pide confirmación en un popup antes de eliminar y envía DELETE al confirmar", async () => {
+		const fetchMock = mockApi([ACCIONISTA]);
+		vi.stubGlobal("fetch", fetchMock);
+		render(<AccionistasManager />);
+		await screen.findByText("Juan");
+
+		await user.click(screen.getByRole("button", { name: /eliminar/i }));
+
+		const dialog = screen.getByRole("dialog");
+		expect(dialog).toBeTruthy();
+		expect(
+			screen.getByText("¿Estás seguro de eliminar este accionista?")
+		).toBeTruthy();
+		expect(
+			fetchMock.mock.calls.filter(([, opts]) => opts?.method === "DELETE")
+		).toHaveLength(0);
+
+		await user.click(
+			within(dialog).getByRole("button", { name: /eliminar/i })
+		);
+
+		await waitFor(() =>
+			expect(fetchMock).toHaveBeenCalledWith(
+				`${API_URL}/1`,
+				expect.objectContaining({ method: "DELETE" })
+			)
+		);
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(screen.getByText("Accionista eliminado correctamente")).toBeTruthy();
+	});
+
+	it("cierra el popup de eliminación sin enviar DELETE al pulsar Cancelar", async () => {
+		const fetchMock = mockApi([ACCIONISTA]);
+		vi.stubGlobal("fetch", fetchMock);
+		render(<AccionistasManager />);
+		await screen.findByText("Juan");
+
+		await user.click(screen.getByRole("button", { name: /eliminar/i }));
+		expect(screen.getByRole("dialog")).toBeTruthy();
+		await user.click(screen.getByRole("button", { name: /cancelar/i }));
+
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(
+			fetchMock.mock.calls.filter(([, opts]) => opts?.method === "DELETE")
+		).toHaveLength(0);
 	});
 });

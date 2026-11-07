@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AccionistaDetalle from "../AccionistaDetalle";
 
@@ -62,7 +62,6 @@ function mockFetch({ asignadas = [], disponibles = [] } = {}) {
 
 beforeEach(() => {
 	vi.stubGlobal("localStorage", setupLocalStorage({ app_token: TOKEN, app_user: ADMIN_USER }));
-	vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
 });
 
 afterEach(() => {
@@ -180,7 +179,7 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		).toBe(`Bearer ${TOKEN}`);
 	});
 
-	it("quita una accion asignada (DELETE) y muestra el mensaje", async () => {
+	it("quita una accion asignada con confirmacion en popup (DELETE) y muestra el mensaje", async () => {
 		const f = mockFetch({ asignadas: [{ _id: "a1", code: "00001" }] });
 		vi.stubGlobal("fetch", f);
 		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
@@ -188,6 +187,17 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		const user = userEvent.setup();
 		await user.click(screen.getByRole("button", { name: "Acciones" }));
 		await user.click(await screen.findByRole("button", { name: "Quitar" }));
+
+		const dialog = screen.getByRole("dialog");
+		expect(dialog).toBeTruthy();
+		expect(screen.getByText("¿Quitar la acción 00001?")).toBeTruthy();
+		expect(
+			f.mock.calls.some(
+				([url, opts]) => opts?.method === "DELETE" && url.includes("/a1")
+			)
+		).toBe(false);
+
+		await user.click(within(dialog).getByRole("button", { name: /quitar/i }));
 
 		await waitFor(() => {
 			expect(
@@ -199,6 +209,25 @@ describe("AccionistaDetalle - tab Acciones", () => {
 				([url, opts]) => opts?.method === "DELETE" && url.includes("/a1")
 			)
 		).toBe(true);
+	});
+
+	it("no quita la accion al pulsar Cancelar en el popup", async () => {
+		const f = mockFetch({ asignadas: [{ _id: "a1", code: "00001" }] });
+		vi.stubGlobal("fetch", f);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+		await user.click(await screen.findByRole("button", { name: "Quitar" }));
+
+		await user.click(screen.getByRole("button", { name: /cancelar/i }));
+
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(
+			f.mock.calls.some(
+				([url, opts]) => opts?.method === "DELETE" && url.includes("/a1")
+			)
+		).toBe(false);
 	});
 
 	it("sin sesión no muestra el tab Acciones (solo admin)", async () => {

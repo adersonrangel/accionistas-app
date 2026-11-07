@@ -21,13 +21,13 @@ export default function Pagination({ total, page = 1, pageSize = 10, onPageChang
 
   return (
     <div className="pagination">
-      <div className="field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <label htmlFor="page-size" className="text-muted" style={{ margin: 0 }}>
+      <div className="field pagination-size-row">
+        <label htmlFor="page-size" className="text-muted">
           Registros por página
         </label>
         <select
           id="page-size"
-          style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #ccd0d5", fontSize: 13, background: "#fff" }}
+          className="pagination-select"
           value={pageSize}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
@@ -45,10 +45,10 @@ export default function Pagination({ total, page = 1, pageSize = 10, onPageChang
       </div>
 
       <nav className="pagination-nav" aria-label="Número de página">
-        <span className="text-muted" style={{ fontSize: 13 }}>
+        <span className="text-muted pagination-note">
           Página {clampedPage}/{totalPages}
         </span>
-        <span style={{ fontSize: 13 }}>de {total}</span>
+        <span className="pagination-note">de {total}</span>
       </nav>
 
       <nav aria-label="Navegación de paginación">
@@ -65,8 +65,7 @@ export default function Pagination({ total, page = 1, pageSize = 10, onPageChang
             key={p}
             type="button"
             disabled={p === clampedPage}
-            className="btn btn-small"
-            style={p === clampedPage ? { background: "#2563eb", color: "#fff" } : undefined}
+            className={`btn btn-small ${p === clampedPage ? "page-current" : ""}`}
             onClick={() => onPageChange?.(p)}
           >
             {p}

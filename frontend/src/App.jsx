@@ -3,6 +3,7 @@ import AccionistasManager from "./AccionistasManager";
 import AccionesManager from "./AccionesManager";
 import UsersManager from "./UsersManager";
 import Landing from "./Landing";
+import BrandMark from "./BrandMark";
 
 const API_URL = "http://localhost:3001/api";
 
@@ -110,19 +111,14 @@ function App() {
 
   return (
     <div className="container">
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-          flexWrap: "wrap",
-          marginBottom: "20px",
-          padding: "12px 0",
-          borderBottom: "1px solid #e2e8f0",
-        }}
-      >
-        <nav style={{ display: "flex", gap: "10px" }}>
+      <header className="app-header">
+        <div className="app-brand">
+          <BrandMark className="app-brand-mark" />
+          <span className="app-brand-name">
+            Accionistas <span>· Hotel</span>
+          </span>
+        </div>
+        <nav className="app-tabs" aria-label="Módulos">
           <button
             className={`btn ${vista === "accionistas" ? "btn-primary" : "btn-secondary"}`}
             onClick={() => setVista("accionistas")}
@@ -146,14 +142,11 @@ function App() {
             </button>
           )}
         </nav>
-        <div
-          style={{ display: "flex", alignItems: "center", gap: "12px" }}
-        >
-          <span className="text-muted">
+        <div className="app-user">
+          <span className="app-user-name">
             {user.username}
             <span
               className={`badge ${user.role === "admin" ? "badge-admin" : "badge-user"}`}
-              style={{ marginLeft: "6px" }}
             >
               {user.role === "admin" ? "Administrador" : "Normal"}
             </span>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AccionModal from "./AccionModal.jsx";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 import Pagination from "./Pagination.jsx";
 
 const API_URL = "http://localhost:3001/api/acciones";
@@ -19,6 +20,7 @@ export default function AccionesManager() {
   const [mensaje, setMensaje] = useState("");
   const [modalAbierto, setModalAbierto] = useState(false);
   const [accionEditando, setAccionEditando] = useState(null);
+  const [eliminandoId, setEliminandoId] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -120,8 +122,13 @@ export default function AccionesManager() {
     }
   }
 
-  async function eliminar(_id) {
-    if (!confirm("¿Estás seguro de eliminar esta acción?")) return;
+  function solicitarEliminar(_id) {
+    setEliminandoId(_id);
+  }
+
+  async function confirmarEliminar() {
+    const _id = eliminandoId;
+    setEliminandoId(null);
     try {
       const res = await fetch(`${API_URL}/${_id}`, {
         method: "DELETE",
@@ -210,7 +217,7 @@ export default function AccionesManager() {
                     </button>
                     <button
                       className="btn btn-small btn-danger"
-                      onClick={() => eliminar(a._id)}
+                      onClick={() => solicitarEliminar(a._id)}
                     >
                       Eliminar
                     </button>
@@ -238,6 +245,14 @@ export default function AccionesManager() {
         accion={accionEditando}
         onClose={cerrarModal}
         onSave={guardarAccion}
+      />
+
+      <ConfirmDialog
+        open={eliminandoId !== null}
+        title="Eliminar acción"
+        message="¿Estás seguro de eliminar esta acción?"
+        onConfirm={confirmarEliminar}
+        onCancel={() => setEliminandoId(null)}
       />
     </div>
   );

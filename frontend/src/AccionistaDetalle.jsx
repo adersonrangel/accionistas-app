@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 
 const API_BASE = "http://localhost:3001/api";
 const ACCIONES_BASE = `${API_BASE}/acciones`;
@@ -151,6 +152,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 	const [disponibles, setDisponibles] = useState([]);
 	const [modalCargando, setModalCargando] = useState(false);
 	const [modalError, setModalError] = useState("");
+	const [accionQuitando, setAccionQuitando] = useState(null);
 
 	const cargarAsignadas = useCallback(async () => {
 		setCargando(true);
@@ -220,8 +222,13 @@ function TabAcciones({ accionista, token, onMensaje }) {
 		}
 	}
 
-	async function quitar(accion) {
-		if (!confirm(`¿Quitar la acción ${accion.code}?`)) return;
+	function solicitarQuitar(accion) {
+		setAccionQuitando(accion);
+	}
+
+	async function confirmarQuitar() {
+		const accion = accionQuitando;
+		setAccionQuitando(null);
 		try {
 			const res = await fetch(
 				`${API_BASE}/accionistas/${accionista.id}/acciones/${accion._id}`,
@@ -238,7 +245,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 
 	return (
 		<div>
-			<div style={{ marginBottom: "12px" }}>
+			<div className="detail-actions">
 				<button className="btn btn-primary" onClick={abrirModal}>
 					+ Asignar acciones
 				</button>
@@ -265,7 +272,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 								<td>
 									<button
 										className="btn btn-small btn-danger"
-										onClick={() => quitar(a)}
+										onClick={() => solicitarQuitar(a)}
 									>
 										Quitar
 									</button>
@@ -282,6 +289,15 @@ function TabAcciones({ accionista, token, onMensaje }) {
 				error={modalError}
 				onClose={() => setModalAbierto(false)}
 				onConfirm={confirmarAsignacion}
+			/>
+
+			<ConfirmDialog
+				open={accionQuitando !== null}
+				title="Quitar acción"
+				message={`¿Quitar la acción ${accionQuitando?.code}?`}
+				confirmLabel="Quitar"
+				onConfirm={confirmarQuitar}
+				onCancel={() => setAccionQuitando(null)}
 			/>
 		</div>
 	);
@@ -318,7 +334,7 @@ export default function AccionistaDetalle({ accionista, onBack, onRefresh }) {
 				</div>
 			)}
 
-			<nav style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+			<nav className="detail-tabs">
 				<button
 					className={`btn ${tab === "datos" ? "btn-primary" : "btn-secondary"}`}
 					onClick={() => setTab("datos")}

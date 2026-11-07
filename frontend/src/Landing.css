@@ -1,16 +1,15 @@
 /* Landing page — paleta navy/dorado (artboard design/landing-accionistas/01-hero-login.html) */
 .lg-root {
-  --lg-navy-900: #081c31;
-  --lg-navy-800: #0e2a47;
-  --lg-navy-700: #16406a;
-  --lg-gold-500: #d9b25c;
-  --lg-gold-600: #c9a24b;
-  --lg-ink: #334155;
-  --lg-slate: #5b6b7f;
-  --lg-line: #e2e8f0;
-  --lg-bg: #f6f8fb;
-  background: var(--lg-bg);
-  color: var(--lg-ink);
+  --lg-navy-900: var(--navy-900);
+  --lg-navy-800: var(--navy-800);
+  --lg-navy-700: var(--navy-700);
+  --lg-gold-500: var(--gold-500);
+  --lg-gold-600: var(--gold-600);
+  --lg-ink: var(--ink);
+  --lg-slate: var(--slate);
+  --lg-line: var(--line);
+  background: var(--bg);
+  color: var(--ink);
 }
 
 @media (prefers-reduced-motion: no-preference) {

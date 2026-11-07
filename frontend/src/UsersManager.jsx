@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 
 const API_URL = "http://localhost:3001/api/users";
 
@@ -15,6 +16,7 @@ export default function UsersManager() {
   const [mensaje, setMensaje] = useState("");
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [usuarioEliminando, setUsuarioEliminando] = useState(null);
 
   // Form state
   const [formUsername, setFormUsername] = useState("");
@@ -99,8 +101,13 @@ export default function UsersManager() {
     }
   }
 
-  async function eliminarUsuario(usuario) {
-    if (!confirm(`¿Estás seguro de eliminar a ${usuario.username}?`)) return;
+  function solicitarEliminar(usuario) {
+    setUsuarioEliminando(usuario);
+  }
+
+  async function confirmarEliminar() {
+    const usuario = usuarioEliminando;
+    setUsuarioEliminando(null);
     try {
       const res = await fetch(`${API_URL}/${usuario.id}`, {
         method: "DELETE",
@@ -129,14 +136,7 @@ export default function UsersManager() {
       )}
 
       <section className="card">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
+        <div className="card-header-row">
           <h2>Usuarios</h2>
           <button className="btn btn-primary" onClick={abrirModalNuevo}>
             + Nuevo Usuario
@@ -179,7 +179,7 @@ export default function UsersManager() {
                     </button>
                     <button
                       className="btn btn-small btn-danger"
-                      onClick={() => eliminarUsuario(u)}
+                      onClick={() => solicitarEliminar(u)}
                     >
                       Eliminar
                     </button>
@@ -244,6 +244,13 @@ export default function UsersManager() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={usuarioEliminando !== null}
+        title="Eliminar usuario"
+        message={`¿Estás seguro de eliminar a ${usuarioEliminando?.username}?`}
+        onConfirm={confirmarEliminar}
+        onCancel={() => setUsuarioEliminando(null)}
+      />
     </div>
   );
 }
