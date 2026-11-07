@@ -17,6 +17,7 @@ const ACCIONISTA = {
 };
 
 const TOKEN = "test-token";
+const ADMIN_USER = JSON.stringify({ username: "admin", role: "admin" });
 
 function setupLocalStorage(initial) {
 	const store = { ...(initial || {}) };
@@ -60,7 +61,7 @@ function mockFetch({ asignadas = [], disponibles = [] } = {}) {
 }
 
 beforeEach(() => {
-	vi.stubGlobal("localStorage", setupLocalStorage({ acciones_token: TOKEN }));
+	vi.stubGlobal("localStorage", setupLocalStorage({ app_token: TOKEN, app_user: ADMIN_USER }));
 	vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
 });
 
@@ -200,15 +201,35 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		).toBe(true);
 	});
 
-	it("sin token pide login antes de mostrar operaciones de escritura", async () => {
-		localStorage.removeItem("acciones_token");
+	it("sin sesión no muestra el tab Acciones (solo admin)", async () => {
+		vi.stubGlobal("localStorage", setupLocalStorage({}));
 		vi.stubGlobal("fetch", mockFetch());
 		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
 
-		const user = userEvent.setup();
-		await user.click(screen.getByRole("button", { name: "Acciones" }));
+		expect(
+			await screen.findByText("Accionista: Juan Perez")
+		).toBeTruthy();
+		// Sin sesión no hay acceso a operaciones de escritura
+		expect(screen.queryByRole("button", { name: "Acciones" })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "+ Asignar acciones" })
+		).toBeNull();
+	});
 
-		expect(await screen.findByText("Iniciar Sesión")).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "+ Asignar acciones" })).toBeNull();
+	it("con sesión de usuario normal no muestra el tab Acciones", async () => {
+		vi.stubGlobal(
+			"localStorage",
+			setupLocalStorage({
+				app_token: TOKEN,
+				app_user: JSON.stringify({ username: "normal", role: "user" }),
+			})
+		);
+		vi.stubGlobal("fetch", mockFetch());
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		expect(
+			await screen.findByText("Accionista: Juan Perez")
+		).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Acciones" })).toBeNull();
 	});
 });
