@@ -14,6 +14,11 @@ mongoose
 		if (seed.seeded) {
 			console.log(`🌱 Colección vacía: ${seed.count} accionistas demo insertados`);
 		}
+		const { seedIfEmpty: seedUsers } = await import("./models/user.model.ts");
+		const userSeed = await seedUsers();
+		if (userSeed.seeded) {
+			console.log("🌱 Usuario admin por defecto creado (admin/admin)");
+		}
 		app.listen(PORT, () => {
 			console.log(`🚀 Backend corriendo en http://localhost:${PORT}`);
 			console.log(
