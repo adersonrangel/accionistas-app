@@ -62,6 +62,9 @@ export default function AccionistasManager() {
 	async function guardarAccionista(values, esEdicion) {
 		const payload = { ...values };
 		if (!esEdicion) delete payload.id;
+		// porcentajeAcciones es derivado (suma de acciones asignadas):
+		// nunca se envía al servidor.
+		delete payload.porcentajeAcciones;
 
 		const url = esEdicion ? `${API_URL}/${accionistaEditando.id}` : API_URL;
 		const method = esEdicion ? "PUT" : "POST";

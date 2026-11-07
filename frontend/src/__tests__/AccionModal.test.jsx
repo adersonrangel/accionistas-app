@@ -17,7 +17,7 @@ describe("AccionModal - Code Validation", () => {
     render(
       <AccionModal
         open={true}
-        accion={{ _id: "1", code: "00001" }}
+        accion={{ _id: "1", code: "00001", percentage: 10 }}
         onClose={onClose}
         onSave={onSave}
       />
@@ -33,7 +33,7 @@ describe("AccionModal - Code Validation", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("allows saving a valid 5-digit code", async () => {
+  it("allows saving a valid 5-digit code (percentage kept as number)", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(null);
     const onClose = vi.fn();
@@ -41,7 +41,7 @@ describe("AccionModal - Code Validation", () => {
     render(
       <AccionModal
         open={true}
-        accion={{ _id: "1", code: "00001" }}
+        accion={{ _id: "1", code: "00001", percentage: 10 }}
         onClose={onClose}
         onSave={onSave}
       />
@@ -55,9 +55,94 @@ describe("AccionModal - Code Validation", () => {
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith(
-        { code: "00099" },
+        { code: "00099", percentage: 10 },
         true
       );
     });
+  });
+});
+
+describe("AccionModal - Percentage", () => {
+  it("creates with a valid percentage", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(null);
+    const onClose = vi.fn();
+
+    render(
+      <AccionModal open={true} accion={null} onClose={onClose} onSave={onSave} />
+    );
+
+    const input = screen.getByLabelText("Porcentaje");
+    await user.type(input, "25.5");
+
+    await user.click(screen.getByRole("button", { name: /crear acción/i }));
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith({ percentage: 25.5 }, false);
+    });
+  });
+
+  it("blocks creation with an empty percentage", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(null);
+    const onClose = vi.fn();
+
+    render(
+      <AccionModal open={true} accion={null} onClose={onClose} onSave={onSave} />
+    );
+
+    await user.click(screen.getByRole("button", { name: /crear acción/i }));
+
+    expect(await screen.findByText("El porcentaje es obligatorio")).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("blocks editing with a percentage above 100", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(null);
+    const onClose = vi.fn();
+
+    render(
+      <AccionModal
+        open={true}
+        accion={{ _id: "1", code: "00001", percentage: 10 }}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    );
+
+    const input = screen.getByLabelText("Porcentaje");
+    await user.clear(input);
+    await user.type(input, "150");
+
+    await user.click(screen.getByRole("button", { name: /guardar cambios/i }));
+
+    expect(
+      await screen.findByText("El porcentaje debe ser un número entre 0 y 100")
+    ).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("edits a legacy accion without percentage: empty field must be filled", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(null);
+    const onClose = vi.fn();
+
+    render(
+      <AccionModal
+        open={true}
+        accion={{ _id: "1", code: "00001" }}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    );
+
+    const input = screen.getByLabelText("Porcentaje");
+    expect(input.value).toBe("");
+
+    await user.click(screen.getByRole("button", { name: /guardar cambios/i }));
+
+    expect(await screen.findByText("El porcentaje es obligatorio")).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
   });
 });

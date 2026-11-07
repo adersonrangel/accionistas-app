@@ -6,6 +6,12 @@ import adminOnly from "../middleware/adminOnly.ts";
 const router = Router();
 const MAX_CODE = 99999;
 
+function isValidPercentage(v: unknown): boolean {
+	return (
+		typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100
+	);
+}
+
 async function nextCode() {
 	const updated = await AccionCounter.findOneAndUpdate(
 		{ _id: "accion_code" },
@@ -49,6 +55,19 @@ router.get("/disponibles", async (req, res) => {
 	}
 });
 
+// GET /api/acciones/total - sum of all percentages (auth; before /:id)
+router.get("/total", async (req, res) => {
+	try {
+		const rows = await Accion.aggregate([
+			{ $group: { _id: null, total: { $sum: "$percentage" } } },
+		]);
+		const totalPercentage = Math.round((rows[0]?.total ?? 0) * 100) / 100;
+		res.json({ data: { totalPercentage } });
+	} catch (err) {
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
 // GET /api/acciones/:id - get one
 router.get("/:id", async (req, res) => {
 	try {
@@ -63,8 +82,14 @@ router.get("/:id", async (req, res) => {
 // POST /api/acciones - create (admin only)
 router.post("/", adminOnly, async (req, res) => {
 	try {
+		const { percentage } = req.body ?? {};
+		if (!isValidPercentage(percentage)) {
+			return res.status(400).json({
+				error: "Percentage must be a number between 0 and 100",
+			});
+		}
 		const code = await nextCode();
-		const newAccion = await Accion.create({ code });
+		const newAccion = await Accion.create({ code, percentage });
 		res.status(201).json({ data: newAccion });
 	} catch (err: any) {
 		if (err.code === 11000 || err.status === 409) {
@@ -74,28 +99,54 @@ router.post("/", adminOnly, async (req, res) => {
 	}
 });
 
-// PUT /api/acciones/:id - update only code (admin only)
+// PUT /api/acciones/:id - update code and/or percentage (admin only)
 router.put("/:id", adminOnly, async (req, res) => {
 	try {
-		const { code } = req.body;
+		const { code, percentage } = req.body ?? {};
 
 		// Reject other fields
-		const otherKeys = Object.keys(req.body).filter(k => k !== 'code' && k !== '_id');
+		const otherKeys = Object.keys(req.body ?? {}).filter(
+			(k) => k !== "code" && k !== "percentage" && k !== "_id"
+		);
 		if (otherKeys.length > 0) {
-			return res.status(400).json({ error: "Only 'code' can be edited" });
+			return res.status(400).json({
+				error: "Only 'code' and 'percentage' can be edited",
+			});
 		}
 
-		if (!code || !/^\d{5}$/.test(code)) {
+		const hasCode = code !== undefined;
+		const hasPercentage = percentage !== undefined;
+		if (!hasCode && !hasPercentage) {
+			return res.status(400).json({
+				error: "Provide 'code' and/or 'percentage'",
+			});
+		}
+
+		if (hasCode && (!code || !/^\d{5}$/.test(code))) {
 			return res.status(400).json({ error: "Code must be exactly 5 digits" });
+		}
+
+		if (hasPercentage && !isValidPercentage(percentage)) {
+			return res.status(400).json({
+				error: "Percentage must be a number between 0 and 100",
+			});
 		}
 
 		const existing = await Accion.findById(req.params.id);
 		if (!existing) return res.status(404).json({ error: "Accion not found" });
 
-		const dup = await Accion.findOne({ code, _id: { $ne: req.params.id } });
-		if (dup) return res.status(409).json({ error: "Code already in use" });
+		if (hasCode) {
+			const dup = await Accion.findOne({ code, _id: { $ne: req.params.id } });
+			if (dup) return res.status(409).json({ error: "Code already in use" });
+		}
 
-		const updated = await Accion.findByIdAndUpdate(req.params.id, { code }, { new: true });
+		const update: { code?: string; percentage?: number } = {};
+		if (hasCode) update.code = code;
+		if (hasPercentage) update.percentage = percentage;
+		const updated = await Accion.findByIdAndUpdate(req.params.id, update, {
+			new: true,
+			runValidators: false,
+		});
 		if (!updated) return res.status(404).json({ error: "Accion not found" });
 		res.json({ data: updated });
 	} catch (err: any) {

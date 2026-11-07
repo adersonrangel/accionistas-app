@@ -54,7 +54,7 @@ describe("Asignacion de acciones a accionistas", () => {
 	}
 
 	async function crearAccion(code: string) {
-		const doc = await Accion.create({ code });
+		const doc = await Accion.create({ code, percentage: 10 });
 		return doc;
 	}
 

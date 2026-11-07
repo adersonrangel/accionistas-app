@@ -7,12 +7,8 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
-    const skip = (page - 1) * pageSize;
-    const [accionistas, total] = await Promise.all([
-      model.Accionista.find().sort({ id: 1 }).skip(skip).limit(pageSize).lean(),
-      model.Accionista.countDocuments(),
-    ]);
-    res.json({ data: accionistas, total });
+    const { docs, total } = await model.findAllPaginado(page, pageSize);
+    res.json({ data: docs, total });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error interno del servidor" });
@@ -34,7 +30,8 @@ router.get("/:id", async (req, res) => {
 // POST /api/accionistas - crear
 router.post("/", async (req, res) => {
   try {
-    const camposRequeridos = ["nombre", "apellido", "dni", "email", "porcentajeAcciones"];
+    // porcentajeAcciones no es editable: se deriva de las acciones asignadas.
+    const camposRequeridos = ["nombre", "apellido", "dni", "email"];
     const faltantes = camposRequeridos.filter(c => !req.body[c]);
     if (faltantes.length > 0) {
       return res.status(400).json({ error: `Faltan campos requeridos: ${faltantes.join(", ")}` });

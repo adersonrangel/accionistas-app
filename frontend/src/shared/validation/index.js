@@ -6,6 +6,7 @@ import { pattern } from "./rules/pattern.js";
 import { enumValidator } from "./rules/enum.js";
 import { dateAfter } from "./rules/dateAfter.js";
 import { passwordMatch } from "./rules/passwordMatch.js";
+import { range } from "./rules/range.js";
 import { getValidatorAdapter as rhfAdapter } from "./adapters/react-hook-form.js";
 import { useValidatedForm } from "./useValidatedForm.js";
 
@@ -16,6 +17,7 @@ registerValidator("pattern", pattern);
 registerValidator("enum", enumValidator);
 registerValidator("dateAfter", dateAfter);
 registerValidator("passwordMatch", passwordMatch);
+registerValidator("range", range);
 
 export { validate, registerValidator };
 export {
@@ -26,6 +28,7 @@ export {
 	enumValidator,
 	dateAfter,
 	passwordMatch,
+	range,
 };
 export { rhfAdapter as getValidatorAdapter };
 export { useValidatedForm };

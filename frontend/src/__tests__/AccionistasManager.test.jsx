@@ -69,11 +69,14 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		).toBeTruthy();
 		expect(screen.getByLabelText("Nombre").value).toBe("");
 
+		// El porcentaje no es editable: se deriva de las acciones asignadas.
+		expect(screen.getByLabelText("% Acciones").disabled).toBe(true);
+		expect(screen.getByLabelText("% Acciones").value).toBe("0");
+
 		await user.type(screen.getByLabelText("Nombre"), "Ana");
 		await user.type(screen.getByLabelText("Apellido"), "Gomez");
 		await user.type(screen.getByLabelText("DNI"), "12345678");
 		await user.type(screen.getByLabelText("Email"), "ana@ejemplo.com");
-		await user.type(screen.getByLabelText("% Acciones"), "10");
 		fireEvent.change(screen.getByLabelText("Fecha de Ingreso"), {
 			target: { value: "2024-02-01" },
 		});
@@ -94,7 +97,7 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		expect(body.nombre).toBe("Ana");
 		expect(body.apellido).toBe("Gomez");
 		expect(body.email).toBe("ana@ejemplo.com");
-		expect(body.porcentajeAcciones).toBe("10");
+		expect(body).not.toHaveProperty("porcentajeAcciones");
 		expect(body).not.toHaveProperty("id");
 
 		expect(screen.queryByRole("dialog")).toBeNull();
@@ -116,7 +119,9 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		).toBeTruthy();
 		expect(screen.getByLabelText("Nombre").value).toBe("Juan");
 		expect(screen.getByLabelText("Email").value).toBe("juan@ejemplo.com");
+		// En edición muestra el valor derivado actual y sigue no editable.
 		expect(screen.getByLabelText("% Acciones").value).toBe("25");
+		expect(screen.getByLabelText("% Acciones").disabled).toBe(true);
 		expect(screen.getByLabelText("DNI").value).toBe("30123456");
 
 		await user.clear(screen.getByLabelText("Nombre"));
@@ -138,6 +143,7 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		expect(body.nombre).toBe("Juan Carlos");
 		expect(body.apellido).toBe("Perez");
 		expect(body.id).toBe(1);
+		expect(body).not.toHaveProperty("porcentajeAcciones");
 
 		expect(screen.queryByRole("dialog")).toBeNull();
 		expect(

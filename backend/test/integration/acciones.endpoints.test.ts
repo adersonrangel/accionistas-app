@@ -30,6 +30,14 @@ describe("Acciones Endpoints", () => {
 		await Counter.deleteMany({ _id: "accion_code" });
 	});
 
+	async function crear(percentage: unknown = null) {
+		const body: any = percentage === null ? {} : { percentage };
+		return request(app)
+			.post("/api/acciones")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send(body);
+	}
+
 	it("GET /api/acciones returns 401 without token", async () => {
 		const response = await request(app).get("/api/acciones");
 		expect(response.statusCode).toBe(401);
@@ -43,37 +51,60 @@ describe("Acciones Endpoints", () => {
 		expect(response.body.data).toEqual([]);
 	});
 
-	it("POST /api/acciones creates action with auto-generated code 00001", async () => {
-		const response = await request(app)
-			.post("/api/acciones")
-			.set("Authorization", `Bearer ${adminToken}`)
-			.send({});
+	it("POST /api/acciones creates action with auto-generated code 00001 and percentage", async () => {
+		const response = await crear(10);
 		expect(response.statusCode).toBe(201);
 		expect(response.body.data.code).toBe("00001");
+		expect(response.body.data.percentage).toBe(10);
 		expect(response.body.data._id).toBeDefined();
 		expect(typeof response.body.data._id).toBe("string");
 	});
 
 	it("POST /api/acciones creates next code 00002", async () => {
-		await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({});
-		const response = await request(app)
-			.post("/api/acciones")
-			.set("Authorization", `Bearer ${adminToken}`)
-			.send({});
+		await crear(10);
+		const response = await crear(20);
 		expect(response.statusCode).toBe(201);
 		expect(response.body.data.code).toBe("00002");
+		expect(response.body.data.percentage).toBe(20);
+	});
+
+	it("POST /api/acciones stores decimal percentage", async () => {
+		const response = await crear(25.5);
+		expect(response.statusCode).toBe(201);
+		expect(response.body.data.percentage).toBe(25.5);
+	});
+
+	it("POST /api/acciones returns 400 without percentage", async () => {
+		const response = await crear(undefined);
+		expect(response.statusCode).toBe(400);
+		expect(response.body.error).toBeDefined();
+	});
+
+	it("POST /api/acciones returns 400 for percentage > 100", async () => {
+		const response = await crear(101);
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("POST /api/acciones returns 400 for negative percentage", async () => {
+		const response = await crear(-5);
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("POST /api/acciones returns 400 for non-numeric percentage", async () => {
+		const response = await crear("abc");
+		expect(response.statusCode).toBe(400);
 	});
 
 	it("POST /api/acciones returns 403 for non-admin", async () => {
 		const response = await request(app)
 			.post("/api/acciones")
 			.set("Authorization", `Bearer ${nonAdminToken}`)
-			.send({});
+			.send({ percentage: 10 });
 		expect(response.statusCode).toBe(403);
 	});
 
-	it("PUT /api/acciones/:id updates only code", async () => {
-		const createRes = await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({});
+	it("PUT /api/acciones/:id updates only code (percentage untouched)", async () => {
+		const createRes = await crear(10);
 		const id = createRes.body.data._id;
 		
 		const response = await request(app)
@@ -82,10 +113,24 @@ describe("Acciones Endpoints", () => {
 			.send({ code: "00099" });
 		expect(response.statusCode).toBe(200);
 		expect(response.body.data.code).toBe("00099");
+		expect(response.body.data.percentage).toBe(10);
+	});
+
+	it("PUT /api/acciones/:id updates only percentage (code untouched)", async () => {
+		const createRes = await crear(10);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ percentage: 42.5 });
+		expect(response.statusCode).toBe(200);
+		expect(response.body.data.code).toBe("00001");
+		expect(response.body.data.percentage).toBe(42.5);
 	});
 
 	it("PUT /api/acciones/:id rejects other fields", async () => {
-		const createRes = await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({});
+		const createRes = await crear(10);
 		const id = createRes.body.data._id;
 		
 		const response = await request(app)
@@ -95,8 +140,8 @@ describe("Acciones Endpoints", () => {
 		expect(response.statusCode).toBe(400);
 	});
 
-	it("PUT /api/acciones/:id rejects bad format", async () => {
-		const createRes = await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({});
+	it("PUT /api/acciones/:id rejects bad code format", async () => {
+		const createRes = await crear(10);
 		const id = createRes.body.data._id;
 		
 		const response = await request(app)
@@ -106,9 +151,42 @@ describe("Acciones Endpoints", () => {
 		expect(response.statusCode).toBe(400);
 	});
 
+	it("PUT /api/acciones/:id rejects percentage > 100", async () => {
+		const createRes = await crear(10);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ percentage: 150 });
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("PUT /api/acciones/:id rejects percentage outside range (negative)", async () => {
+		const createRes = await crear(10);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ percentage: -1 });
+		expect(response.statusCode).toBe(400);
+	});
+
+	it("PUT /api/acciones/:id rejects when neither code nor percentage provided", async () => {
+		const createRes = await crear(10);
+		const id = createRes.body.data._id;
+		
+		const response = await request(app)
+			.put(`/api/acciones/${id}`)
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({});
+		expect(response.statusCode).toBe(400);
+	});
+
 	it("PUT /api/acciones/:id rejects duplicate code", async () => {
-		await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({}); // 00001
-		const createRes = await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({}); // 00002
+		await crear(10); // 00001
+		const createRes = await crear(10); // 00002
 		const id = createRes.body.data._id;
 		
 		const response = await request(app)
@@ -118,8 +196,16 @@ describe("Acciones Endpoints", () => {
 		expect(response.statusCode).toBe(409);
 	});
 
+	it("PUT /api/acciones/:id returns 404 for unknown id", async () => {
+		const response = await request(app)
+			.put("/api/acciones/00000000-0000-4000-8000-000000000000")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ percentage: 10 });
+		expect(response.statusCode).toBe(404);
+	});
+
 	it("DELETE /api/acciones/:id deletes action", async () => {
-		const createRes = await request(app).post("/api/acciones").set("Authorization", `Bearer ${adminToken}`).send({});
+		const createRes = await crear(10);
 		const id = createRes.body.data._id;
 		
 		const response = await request(app)
@@ -131,5 +217,29 @@ describe("Acciones Endpoints", () => {
 			.get(`/api/acciones/${id}`)
 			.set("Authorization", `Bearer ${adminToken}`);
 		expect(getRes.statusCode).toBe(404);
+	});
+
+	it("GET /api/acciones/total returns 401 without token", async () => {
+		const response = await request(app).get("/api/acciones/total");
+		expect(response.statusCode).toBe(401);
+	});
+
+	it("GET /api/acciones/total returns 0 when empty", async () => {
+		const response = await request(app)
+			.get("/api/acciones/total")
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(response.statusCode).toBe(200);
+		expect(response.body.data.totalPercentage).toBe(0);
+	});
+
+	it("GET /api/acciones/total sums all acciones (ignores pagination)", async () => {
+		await crear(25);
+		await crear(25.5);
+		await crear(10);
+		const response = await request(app)
+			.get("/api/acciones/total")
+			.set("Authorization", `Bearer ${adminToken}`);
+		expect(response.statusCode).toBe(200);
+		expect(response.body.data.totalPercentage).toBe(60.5);
 	});
 });

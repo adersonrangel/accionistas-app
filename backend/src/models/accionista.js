@@ -46,16 +46,55 @@ function toPublic(doc) {
 	};
 }
 
-const CREADOS = ["nombre", "apellido", "dni", "email", "porcentajeAcciones", "fechaIngreso", "telefono", "direccion"];
+const CREADOS = ["nombre", "apellido", "dni", "email", "fechaIngreso", "telefono", "direccion"];
+
+// Suma de porcentajes de las acciones asignadas, por _id (ObjectId) del
+// accionista. Es la fuente del campo porcentajeAcciones derivado.
+async function sumasPorAccionista() {
+	// Modelo ya registrado sobre la instancia compartida de mongoose (lo
+	// compila el módulo de acciones al arrancar la app); el import de
+	// respaldo solo cubre arranques donde aún no cargó.
+	const Accion = models.Accion || (await import("./accion.model.ts")).default;
+	const rows = await Accion.aggregate([
+		{ $match: { shareholderId: { $ne: null } } },
+		{ $group: { _id: "$shareholderId", total: { $sum: "$percentage" } } },
+	]);
+	const mapa = new Map();
+	for (const row of rows) {
+		mapa.set(String(row._id), Math.round((row.total ?? 0) * 100) / 100);
+	}
+	return mapa;
+}
+
+// Sobrescribe porcentajeAcciones con la suma de sus acciones asignadas.
+function conPorcentajeDerivado(doc, mapa) {
+	doc.porcentajeAcciones = mapa.get(String(doc._id)) ?? 0;
+	return doc;
+}
 
 async function findAll() {
 	const docs = await Accionista.find().sort({ id: 1 }).lean();
-	return docs.map(toPublic);
+	const mapa = await sumasPorAccionista();
+	return docs.map((d) => toPublic(conPorcentajeDerivado(d, mapa)));
+}
+
+// Listado paginado para la route GET /: mantiene la forma raw del doc
+// (incluido _id) pero con el porcentaje derivado aplicado.
+async function findAllPaginado(page, pageSize) {
+	const skip = (page - 1) * pageSize;
+	const [docs, total] = await Promise.all([
+		Accionista.find().sort({ id: 1 }).skip(skip).limit(pageSize).lean(),
+		Accionista.countDocuments(),
+	]);
+	const mapa = await sumasPorAccionista();
+	return { docs: docs.map((d) => conPorcentajeDerivado(d, mapa)), total };
 }
 
 async function findById(id) {
 	const doc = await Accionista.findOne({ id: Number(id) }).lean();
-	return doc ? toPublic(doc) : null;
+	if (!doc) return null;
+	const mapa = await sumasPorAccionista();
+	return toPublic(conPorcentajeDerivado(doc, mapa));
 }
 
 async function create(data) {
@@ -66,12 +105,13 @@ async function create(data) {
 		apellido: data.apellido || "",
 		dni: data.dni || "",
 		email: data.email || "",
-		porcentajeAcciones: Number(data.porcentajeAcciones) || 0,
+		// porcentajeAcciones es derivado: no se acepta del input.
 		fechaIngreso: data.fechaIngreso || new Date().toISOString().split("T")[0],
 		telefono: data.telefono || "",
 		direccion: data.direccion || "",
 	});
-	return toPublic(doc);
+	const mapa = await sumasPorAccionista();
+	return toPublic(conPorcentajeDerivado(doc, mapa));
 }
 
 async function update(id, data) {
@@ -84,7 +124,9 @@ async function update(id, data) {
 		{ $set: set },
 		{ returnDocument: "after" },
 	);
-	return doc ? toPublic(doc) : null;
+	if (!doc) return null;
+	const mapa = await sumasPorAccionista();
+	return toPublic(conPorcentajeDerivado(doc, mapa));
 }
 
 async function remove(id) {
@@ -107,4 +149,4 @@ async function seedIfEmpty() {
 	return { seeded: true, count: demo.length };
 }
 
-module.exports = { Accionista, findAll, findById, create, update, remove, seedIfEmpty };
+module.exports = { Accionista, findAll, findAllPaginado, findById, create, update, remove, seedIfEmpty };

@@ -14,6 +14,7 @@ export default function AccionesManager() {
 
   const [acciones, setAcciones] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalPorcentaje, setTotalPorcentaje] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState("");
@@ -51,6 +52,7 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
     localStorage.removeItem("acciones_token");
     setToken(null);
     setAcciones([]);
+    setTotalPorcentaje(0);
   }
 
   async function cargarAcciones() {
@@ -78,8 +80,27 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
     }
   }
 
+  async function cargarTotalPorcentaje() {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/total`, { headers: authHeaders });
+      if (res.status === 401) {
+        cerrarSesion();
+        return;
+      }
+      if (!res.ok) throw new Error("Error cargando el total de porcentajes");
+      const json = await res.json();
+      setTotalPorcentaje(json.data?.totalPercentage ?? 0);
+    } catch (_err) {
+      setError(`No se pudo conectar con el backend. ¿Está corriendo en el puerto 3001?`);
+    }
+  }
+
   useEffect(() => {
-    if (token) cargarAcciones();
+    if (token) {
+      cargarAcciones();
+      cargarTotalPorcentaje();
+    }
   }, [token, page, pageSize]);
 
   function abrirModalNuevo() {
@@ -121,6 +142,7 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       setMensaje(esEdicion ? "Acción actualizada correctamente" : "Acción creada correctamente");
       cerrarModal();
       cargarAcciones();
+      cargarTotalPorcentaje();
       return null;
     } catch (err) {
       return `Error de conexión: ${err.message}`;
@@ -144,6 +166,7 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       }
       setMensaje("Acción eliminada correctamente");
       cargarAcciones();
+      cargarTotalPorcentaje();
     } catch (err) {
       setMensaje(`Error de conexión al eliminar: ${err.message}`);
     }
@@ -214,6 +237,13 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       )}
 
       <section className="card">
+        <h2>Total de Porcentajes</h2>
+        <p className="total-porcentaje" data-testid="total-porcentaje">
+          {totalPorcentaje.toLocaleString("es-AR", { maximumFractionDigits: 2 })} %
+        </p>
+      </section>
+
+      <section className="card">
         <h2>Listado de Acciones</h2>
         {loading ? (
           <p className="text-muted">Cargando...</p>
@@ -226,6 +256,7 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
             <thead>
               <tr>
                 <th>Código</th>
+                <th>Porcentaje</th>
                 <th>ID (GUID)</th>
                 <th>Accionista</th>
                 <th>Creación</th>
@@ -237,6 +268,7 @@ const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
               {acciones.map((a) => (
                 <tr key={a._id}>
                   <td>{a.code}</td>
+                  <td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
                   <td>{a._id ? a._id.substring(0, 8) + "..." : ""}</td>
                   <td>{a.shareholderId || "—"}</td>
                   <td>{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "—"}</td>

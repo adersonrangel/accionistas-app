@@ -108,6 +108,39 @@ describe("AccionistaDetalle - tab Acciones", () => {
 		).toBeTruthy();
 	});
 
+	it("muestra el porcentaje en el listado de acciones asignadas", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({ asignadas: [{ _id: "a1", code: "00001", percentage: 25 }] })
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+
+		expect(screen.getByText("Porcentaje")).toBeTruthy();
+		expect(await screen.findByText("25 %")).toBeTruthy();
+	});
+
+	it("muestra el porcentaje en el popup de asignación", async () => {
+		vi.stubGlobal(
+			"fetch",
+			mockFetch({
+				asignadas: [],
+				disponibles: [{ _id: "a1", code: "00001", percentage: 40 }],
+			})
+		);
+		render(<AccionistaDetalle accionista={ACCIONISTA} onBack={() => {}} />);
+
+		const user = userEvent.setup();
+		await user.click(screen.getByRole("button", { name: "Acciones" }));
+		await user.click(
+			await screen.findByRole("button", { name: "+ Asignar acciones" })
+		);
+
+		expect(await screen.findByText("40 %")).toBeTruthy();
+	});
+
 	it("asigna 1 o varias acciones seleccionadas (POST lote)", async () => {
 		vi.stubGlobal(
 			"fetch",

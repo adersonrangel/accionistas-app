@@ -87,6 +87,7 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 								<tr>
 									<th></th>
 									<th>Código</th>
+									<th>Porcentaje</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -101,6 +102,7 @@ function AsignarAccionesModal({ open, onClose, onConfirm, error, cargando, dispo
 											/>
 										</td>
 										<td>{a.code}</td>
+										<td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
 									</tr>
 								))}
 							</tbody>
@@ -241,6 +243,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 					<thead>
 						<tr>
 							<th>Código</th>
+							<th>Porcentaje</th>
 							<th>Acciones</th>
 						</tr>
 					</thead>
@@ -248,6 +251,7 @@ function TabAcciones({ accionista, token, onMensaje }) {
 						{asignadas.map((a) => (
 							<tr key={a._id}>
 								<td>{a.code}</td>
+								<td>{a.percentage != null ? `${a.percentage} %` : "—"}</td>
 								<td>
 									<button
 										className="btn btn-small btn-danger"

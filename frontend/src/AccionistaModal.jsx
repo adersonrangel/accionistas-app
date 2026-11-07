@@ -7,7 +7,6 @@ const initialValuesVacios = {
 	apellido: "",
 	dni: "",
 	email: "",
-	porcentajeAcciones: "",
 	fechaIngreso: "",
 	telefono: "",
 	direccion: "",
@@ -25,7 +24,7 @@ const fieldRules = {
 			params: { pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" },
 		},
 	],
-	porcentajeAcciones: [{ type: "required" }],
+	// porcentajeAcciones no es editable: se deriva de las acciones asignadas.
 	fechaIngreso: [{ type: "required" }],
 	telefono: [],
 	direccion: [],
@@ -41,6 +40,12 @@ function AccionistaForm({ initialValues, esEdicion, onClose, onSave }) {
 		initialValues ?? initialValuesVacios,
 		fieldRules
 	);
+	// Valor de solo lectura: la suma de las acciones asignadas que devuelve
+	// el servidor (0 al crear).
+	const porcentajeMostrado =
+		initialValues && initialValues.porcentajeAcciones != null
+			? initialValues.porcentajeAcciones
+			: 0;
 	const [serverError, setServerError] = useState("");
 	const [guardando, setGuardando] = useState(false);
 
@@ -129,19 +134,13 @@ function AccionistaForm({ initialValues, esEdicion, onClose, onSave }) {
 						type="number"
 						step="0.01"
 						id="porcentajeAcciones"
-						{...getFieldProps("porcentajeAcciones")}
-						required
-						aria-describedby={
-							fieldErrors.porcentajeAcciones
-								? "porcentaje-error"
-								: undefined
-						}
+						value={porcentajeMostrado}
+						disabled
+						aria-describedby="porcentaje-ayuda"
 					/>
-					{fieldErrors.porcentajeAcciones && (
-						<span id="porcentaje-error" role="alert" aria-live="polite">
-							{fieldErrors.porcentajeAcciones}
-						</span>
-					)}
+					<span id="porcentaje-ayuda" className="text-muted">
+						Se calcula a partir de las acciones asignadas.
+					</span>
 				</div>
 				<div className="field">
 					<label htmlFor="fechaIngreso">Fecha de Ingreso</label>
