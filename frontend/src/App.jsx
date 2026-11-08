@@ -11,7 +11,7 @@ const API_URL = "http://localhost:3001/api";
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [vista, setVista] = useState("accionistas");
+  const [vista, setVista] = useState("consulta");
 
   // On mount: read session from localStorage.
   useEffect(() => {
@@ -88,18 +88,18 @@ function App() {
     localStorage.removeItem("app_user");
     setToken(null);
     setUser(null);
-    setVista("accionistas");
+    setVista("consulta");
   }
 
-  // If role changes and the current vista is not allowed, fall back to accionistas.
+  // If role changes and the current vista is not allowed, fall back to consulta.
   useEffect(() => {
     if (!user) return;
-    const allowed = ["accionistas", "consulta"];
+    const allowed = ["consulta", "accionistas"];
     if (user.role === "admin") {
       allowed.push("acciones", "users");
     }
     if (!allowed.includes(vista)) {
-      setVista("accionistas");
+      setVista("consulta");
     }
   }, [user, vista]);
 
@@ -121,16 +121,16 @@ function App() {
         </div>
         <nav className="app-tabs" aria-label="Módulos">
           <button
-            className={`btn ${vista === "accionistas" ? "btn-primary" : "btn-secondary"}`}
-            onClick={() => setVista("accionistas")}
-          >
-            Accionistas
-          </button>
-          <button
             className={`btn ${vista === "consulta" ? "btn-primary" : "btn-secondary"}`}
             onClick={() => setVista("consulta")}
           >
             Consulta
+          </button>
+          <button
+            className={`btn ${vista === "accionistas" ? "btn-primary" : "btn-secondary"}`}
+            onClick={() => setVista("accionistas")}
+          >
+            Accionistas
           </button>
           {showAcciones && (
             <button
