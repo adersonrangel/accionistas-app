@@ -80,7 +80,7 @@ describe("Consulta de accionista por DNI", () => {
 				.set("Authorization", `Bearer ${adminToken}`);
 
 			expect(res.status).toBe(404);
-			expect(res.body.error).toBe("No se encontró ningún accionista con ese DNI");
+			expect(res.body.error).toBe("No se encontró ningún accionista con esa identificación");
 		});
 
 		it("devuelve el accionista con noches totales calculadas de sus acciones", async () => {

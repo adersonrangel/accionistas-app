@@ -17,7 +17,7 @@ export default function ConsultaAccionista() {
 		e.preventDefault();
 		const dniLimpio = dni.trim();
 		if (!dniLimpio) {
-			setError("Ingresá un DNI para buscar");
+			setError("Ingresá una identificación para buscar");
 			return;
 		}
 
@@ -66,14 +66,14 @@ export default function ConsultaAccionista() {
 				<form onSubmit={handleBuscar} className="consulta-form">
 					<div className="consulta-input-group">
 						<label htmlFor="dni-busqueda" className="consulta-label">
-							Buscar por DNI
+							Buscar por identificación
 						</label>
 						<div className="consulta-input-row">
 							<input
 								id="dni-busqueda"
 								type="text"
 								className="consulta-input"
-								placeholder="Ej: 30111222"
+								placeholder="Ej: 30111222 o 12313231-6"
 								value={dni}
 								onChange={(e) => setDni(e.target.value)}
 								disabled={loading}
@@ -112,7 +112,7 @@ export default function ConsultaAccionista() {
 				<div className="consulta-empty-state">
 					<div className="consulta-empty-icon">👤</div>
 					<p className="consulta-empty-text">
-						Ingresá el DNI de un accionista para consultar su información
+						Ingresá la identificación de un accionista para consultar su información
 						y noches de beneficio disponibles.
 					</p>
 				</div>
@@ -142,7 +142,7 @@ function AccionistaCard({ accionista, onNuevaBusqueda }) {
 
 	return (
 		<div className="accionista-card">
-			{/* Header con nombre y DNI */}
+			{/* Header con nombre e identificación */}
 			<div className="accionista-card-header">
 				<div className="accionista-card-avatar">
 					{accionista.nombre.charAt(0)}{accionista.apellido.charAt(0)}
@@ -151,7 +151,7 @@ function AccionistaCard({ accionista, onNuevaBusqueda }) {
 					<h2 className="accionista-card-nombre">
 						{accionista.nombre} {accionista.apellido}
 					</h2>
-					<span className="accionista-card-dni">DNI: {accionista.dni}</span>
+					<span className="accionista-card-dni">Identificación: {accionista.dni}</span>
 				</div>
 				<span className="accionista-card-id">#{accionista.id}</span>
 			</div>

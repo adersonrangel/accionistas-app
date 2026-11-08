@@ -94,7 +94,8 @@ describe("AccionistasManager con popup de alta/edición", () => {
 
 		await user.type(screen.getByLabelText("Nombre"), "Ana");
 		await user.type(screen.getByLabelText("Apellido"), "Gomez");
-		await user.type(screen.getByLabelText("DNI"), "12345678");
+		// Las identificaciones pueden ser texto libre con guion (ej. empresas).
+		await user.type(screen.getByLabelText("Identificación"), "12313231-6");
 		await user.type(screen.getByLabelText("Email"), "ana@ejemplo.com");
 		fireEvent.change(screen.getByLabelText("Fecha de Ingreso"), {
 			target: { value: "2024-02-01" },
@@ -115,6 +116,7 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		const body = JSON.parse(postCall[1].body);
 		expect(body.nombre).toBe("Ana");
 		expect(body.apellido).toBe("Gomez");
+		expect(body.dni).toBe("12313231-6");
 		expect(body.email).toBe("ana@ejemplo.com");
 		expect(body).not.toHaveProperty("porcentajeAcciones");
 		expect(body).not.toHaveProperty("id");
@@ -141,7 +143,7 @@ describe("AccionistasManager con popup de alta/edición", () => {
 		// En edición muestra el valor derivado actual y sigue no editable.
 		expect(screen.getByLabelText("% Acciones").value).toBe("25");
 		expect(screen.getByLabelText("% Acciones").disabled).toBe(true);
-		expect(screen.getByLabelText("DNI").value).toBe("30123456");
+		expect(screen.getByLabelText("Identificación").value).toBe("30123456");
 
 		await user.clear(screen.getByLabelText("Nombre"));
 		await user.type(screen.getByLabelText("Nombre"), "Juan Carlos");

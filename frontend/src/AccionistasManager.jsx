@@ -175,7 +175,7 @@ export default function AccionistasManager() {
 									<th>ID</th>
 									<th>Nombre</th>
 									<th>Apellido</th>
-									<th>DNI</th>
+									<th>Identificación</th>
 									<th>Email</th>
 									<th>% Acciones</th>
 									<th>Fecha Ingreso</th>

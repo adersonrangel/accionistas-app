@@ -90,6 +90,23 @@ describe("Accionistas endpoints backed by MongoDB", () => {
 		expect(response.body.data.porcentajeAcciones).toBe(0);
 	});
 
+	it("almacena una identificación con guion (ej. 12313231-6) sin alterar el texto", async () => {
+		const response = await request(app)
+			.post("/api/accionistas")
+			.set("Accept", "application/json")
+			.set("Authorization", `Bearer ${adminToken}`)
+			.send({ ...baseAccionista, dni: "12313231-6" });
+		expect(response.statusCode).toBe(201);
+		expect(response.body.data.dni).toBe("12313231-6");
+
+		const docs = await mongoose.connection.db
+			.collection(COLLECTION)
+			.find({ dni: "12313231-6" })
+			.toArray();
+		expect(docs).toHaveLength(1);
+		expect(docs[0].dni).toBe("12313231-6");
+	});
+
 	it("POST / ignores a provided porcentajeAcciones (derived field)", async () => {
 		const response = await request(app)
 			.post("/api/accionistas")

@@ -98,7 +98,7 @@ function AccionistaForm({ initialValues, esEdicion, onClose, onSave }) {
 					)}
 				</div>
 				<div className="field">
-					<label htmlFor="dni">DNI</label>
+					<label htmlFor="dni">Identificación</label>
 					<input
 						id="dni"
 						{...getFieldProps("dni")}

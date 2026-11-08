@@ -30,7 +30,7 @@ function TabDatos({ accionista }) {
 					<td>{accionista.apellido}</td>
 				</tr>
 				<tr>
-					<th>DNI</th>
+					<th>Identificación</th>
 					<td>{accionista.dni}</td>
 				</tr>
 				<tr>

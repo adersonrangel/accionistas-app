@@ -14,14 +14,14 @@ router.get("/accionista/dni/:dni", async (req, res) => {
 		const { dni } = req.params;
 
 		if (!dni || dni.trim().length === 0) {
-			return res.status(400).json({ error: "El DNI es requerido" });
+			return res.status(400).json({ error: "La identificación es requerida" });
 		}
 
 		const resultado = await consultarPorDni(dni.trim());
 
 		if (!resultado) {
 			return res.status(404).json({
-				error: "No se encontró ningún accionista con ese DNI",
+				error: "No se encontró ningún accionista con esa identificación",
 			});
 		}
 
