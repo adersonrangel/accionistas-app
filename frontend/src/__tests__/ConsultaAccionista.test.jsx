@@ -72,4 +72,48 @@ describe("ConsultaAccionista - descuento de noches", () => {
 		expect(await screen.findByRole("progressbar", { name: "6 de 10 noches disponibles" })).toBeTruthy();
 		expect(screen.queryByRole("dialog", { name: "Descontar noches" })).toBeNull();
 	});
+
+	it("muestra la fecha y las noches del historial, incluidos años anteriores", async () => {
+		const user = userEvent.setup();
+		const historial = [
+			{
+				id: "mov-2",
+				tipo: "devolucion",
+				cantidad: 1,
+				fecha: "2026-01-15T00:00:00.000Z",
+				motivo: "Cancelación",
+				usuario: "admin",
+			},
+			{
+				id: "mov-1",
+				tipo: "descuento",
+				cantidad: 2,
+				fecha: "2025-12-20T00:00:00.000Z",
+				motivo: "Fin de semana",
+				usuario: "normal",
+			},
+		];
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(respuesta(ACCIONISTA))
+			.mockResolvedValueOnce(respuesta(historial));
+		vi.stubGlobal("fetch", fetchMock);
+		render(<ConsultaAccionista />);
+
+		await user.type(screen.getByLabelText("Buscar por identificación"), ACCIONISTA.dni);
+		await user.click(screen.getByRole("button", { name: "Buscar" }));
+		expect(await screen.findByText("Juan Perez")).toBeTruthy();
+		await user.click(screen.getByRole("button", { name: /ver historial/i }));
+
+		const dialog = await screen.findByRole("dialog", { name: "Historial de noches" });
+		const devolucion = (await within(dialog).findByText("15/01/2026")).closest("tr");
+		expect(within(devolucion).getByText("Devolución")).toBeTruthy();
+		expect(within(devolucion).getByText("1")).toBeTruthy();
+		const descuento = within(dialog).getByText("20/12/2025").closest("tr");
+		expect(within(descuento).getByText("Descuento")).toBeTruthy();
+		expect(within(descuento).getByText("2")).toBeTruthy();
+		expect(fetchMock.mock.calls[1][0]).toBe(
+			"http://localhost:3001/api/consulta/accionista/dni/12313231-6/historial"
+		);
+	});
 });

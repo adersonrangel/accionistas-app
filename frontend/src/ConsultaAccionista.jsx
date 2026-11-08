@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DescuentoNochesModal from "./DescuentoNochesModal";
+import HistorialNochesModal from "./HistorialNochesModal";
 
 const API_URL = "http://localhost:3001/api/consulta";
 
@@ -14,6 +15,10 @@ export default function ConsultaAccionista() {
 	const [resultado, setResultado] = useState(null);
 	const [busquedaRealizada, setBusquedaRealizada] = useState(false);
 	const [descuentoAbierto, setDescuentoAbierto] = useState(false);
+	const [historialAbierto, setHistorialAbierto] = useState(false);
+	const [historial, setHistorial] = useState([]);
+	const [historialCargando, setHistorialCargando] = useState(false);
+	const [historialError, setHistorialError] = useState("");
 
 	async function handleBuscar(e) {
 		e.preventDefault();
@@ -54,6 +59,7 @@ export default function ConsultaAccionista() {
 		setResultado(null);
 		setBusquedaRealizada(false);
 		setDescuentoAbierto(false);
+		setHistorialAbierto(false);
 		setError(null);
 		setDni("");
 	}
@@ -81,6 +87,31 @@ export default function ConsultaAccionista() {
 		} catch (err) {
 			console.error(err);
 			return "No se pudo conectar con el servidor. Verificá que el backend esté corriendo.";
+		}
+	}
+
+	async function handleVerHistorial() {
+		setHistorialAbierto(true);
+		setHistorialCargando(true);
+		setHistorialError("");
+		setHistorial([]);
+		try {
+			const token = safeGetItem("app_token");
+			const res = await fetch(
+				`${API_URL}/accionista/dni/${encodeURIComponent(resultado.dni)}/historial`,
+				{ headers: token ? { Authorization: `Bearer ${token}` } : {} }
+			);
+			const json = await res.json();
+			if (!res.ok) {
+				setHistorialError(json.error || "No se pudo obtener el historial");
+				return;
+			}
+			setHistorial(json.data);
+		} catch (err) {
+			console.error(err);
+			setHistorialError("No se pudo conectar con el servidor. Verificá que el backend esté corriendo.");
+		} finally {
+			setHistorialCargando(false);
 		}
 	}
 
@@ -134,6 +165,7 @@ export default function ConsultaAccionista() {
 					accionista={resultado}
 					onNuevaBusqueda={handleNuevaBusqueda}
 					onDescontar={() => setDescuentoAbierto(true)}
+					onVerHistorial={handleVerHistorial}
 				/>
 			)}
 
@@ -153,6 +185,14 @@ export default function ConsultaAccionista() {
 					onConfirm={handleDescontar}
 				/>
 			)}
+			{historialAbierto && (
+				<HistorialNochesModal
+					movimientos={historial}
+					cargando={historialCargando}
+					error={historialError}
+					onClose={() => setHistorialAbierto(false)}
+				/>
+			)}
 		</div>
 	);
 }
@@ -161,7 +201,7 @@ export default function ConsultaAccionista() {
  * Card profesional con la información del accionista y sus noches de beneficio.
  * Incluye indicador visual de noches disponibles y acciones futuras (módulos separados).
  */
-function AccionistaCard({ accionista, onNuevaBusqueda, onDescontar }) {
+function AccionistaCard({ accionista, onNuevaBusqueda, onDescontar, onVerHistorial }) {
 	const { noches } = accionista;
 	const porcentajeDisponible = noches.totales > 0
 		? Math.round((noches.disponibles / noches.totales) * 100)
@@ -298,8 +338,7 @@ function AccionistaCard({ accionista, onNuevaBusqueda, onDescontar }) {
 					</button>
 					<button
 						className="btn btn-secondary"
-						disabled
-						title="Módulo en desarrollo"
+						onClick={onVerHistorial}
 					>
 						📋 Ver historial
 					</button>
