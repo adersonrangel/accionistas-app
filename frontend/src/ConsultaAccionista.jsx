@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DescuentoNochesModal from "./DescuentoNochesModal";
 
 const API_URL = "http://localhost:3001/api/consulta";
 
@@ -12,6 +13,7 @@ export default function ConsultaAccionista() {
 	const [error, setError] = useState(null);
 	const [resultado, setResultado] = useState(null);
 	const [busquedaRealizada, setBusquedaRealizada] = useState(false);
+	const [descuentoAbierto, setDescuentoAbierto] = useState(false);
 
 	async function handleBuscar(e) {
 		e.preventDefault();
@@ -51,8 +53,35 @@ export default function ConsultaAccionista() {
 	function handleNuevaBusqueda() {
 		setResultado(null);
 		setBusquedaRealizada(false);
+		setDescuentoAbierto(false);
 		setError(null);
 		setDni("");
+	}
+
+	async function handleDescontar({ cantidad, fecha }) {
+		try {
+			const token = safeGetItem("app_token");
+			const res = await fetch(
+				`${API_URL}/accionista/dni/${encodeURIComponent(resultado.dni)}/descuento`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						...(token ? { Authorization: `Bearer ${token}` } : {}),
+					},
+					body: JSON.stringify({ cantidad, fecha }),
+				}
+			);
+			const json = await res.json();
+			if (!res.ok) return json.error || "No se pudo registrar el descuento";
+
+			setResultado(json.data);
+			setDescuentoAbierto(false);
+			return null;
+		} catch (err) {
+			console.error(err);
+			return "No se pudo conectar con el servidor. Verificá que el backend esté corriendo.";
+		}
 	}
 
 	return (
@@ -104,6 +133,7 @@ export default function ConsultaAccionista() {
 				<AccionistaCard
 					accionista={resultado}
 					onNuevaBusqueda={handleNuevaBusqueda}
+					onDescontar={() => setDescuentoAbierto(true)}
 				/>
 			)}
 
@@ -117,6 +147,12 @@ export default function ConsultaAccionista() {
 					</p>
 				</div>
 			)}
+			{descuentoAbierto && (
+				<DescuentoNochesModal
+					onClose={() => setDescuentoAbierto(false)}
+					onConfirm={handleDescontar}
+				/>
+			)}
 		</div>
 	);
 }
@@ -125,7 +161,7 @@ export default function ConsultaAccionista() {
  * Card profesional con la información del accionista y sus noches de beneficio.
  * Incluye indicador visual de noches disponibles y acciones futuras (módulos separados).
  */
-function AccionistaCard({ accionista, onNuevaBusqueda }) {
+function AccionistaCard({ accionista, onNuevaBusqueda, onDescontar }) {
 	const { noches } = accionista;
 	const porcentajeDisponible = noches.totales > 0
 		? Math.round((noches.disponibles / noches.totales) * 100)
@@ -256,8 +292,7 @@ function AccionistaCard({ accionista, onNuevaBusqueda }) {
 					{/* Placeholder para futuros módulos: Descontar noches, Historial, etc. */}
 					<button
 						className="btn btn-primary"
-						disabled
-						title="Módulo en desarrollo"
+						onClick={onDescontar}
 					>
 						🌙 Descontar noches
 					</button>
