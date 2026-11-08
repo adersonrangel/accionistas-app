@@ -433,3 +433,439 @@ h2 {
   color: #fff !important;
   cursor: default;
 }
+
+/* ============================================================
+   MÓDULO DE CONSULTA DE ACCIONISTA
+   ============================================================ */
+
+.consulta-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.consulta-search-card {
+  margin-bottom: 24px;
+}
+
+.consulta-form {
+  margin: 0;
+}
+
+.consulta-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.consulta-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--navy-800);
+}
+
+.consulta-input-row {
+  display: flex;
+  gap: 12px;
+}
+
+.consulta-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 16px;
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.consulta-input:focus {
+  outline: none;
+  border-color: var(--navy-800);
+  box-shadow: 0 0 0 3px rgba(14, 42, 71, 0.1);
+}
+
+.consulta-input::placeholder {
+  color: #94a3b8;
+}
+
+.consulta-btn-buscar {
+  padding: 12px 28px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.consulta-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.consulta-alert-icon {
+  font-size: 18px;
+}
+
+/* Estado vacío */
+.consulta-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: #fff;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+}
+
+.consulta-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.consulta-empty-text {
+  color: var(--slate);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* ---------- Card del accionista ---------- */
+.accionista-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(15, 42, 71, 0.08);
+}
+
+/* Header de la card */
+.accionista-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--navy-800) 0%, var(--navy-700) 100%);
+  color: #fff;
+}
+
+.accionista-card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--gold-500);
+  color: var(--navy-900);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.accionista-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.accionista-card-nombre {
+  margin: 0 0 4px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.accionista-card-dni {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.accionista-card-id {
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Sección de noches de beneficio */
+.accionista-card-noches {
+  padding: 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+}
+
+.noches-indicador {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.noches-indicador-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.noches-indicador-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate);
+}
+
+.noches-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.noches-badge-alto {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.noches-badge-medio {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.noches-badge-bajo {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Número principal de noches */
+.noches-principal {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.noches-numero {
+  display: block;
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--navy-800);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.noches-texto {
+  display: block;
+  font-size: 15px;
+  color: var(--slate);
+  margin-top: 4px;
+}
+
+/* Barra de progreso */
+.noches-barra-container {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.noches-barra {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease-out;
+}
+
+.noches-barra-alto {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.noches-barra-medio {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.noches-barra-bajo {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Detalle de noches (totales, usadas, disponibles) */
+.noches-detalle {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+}
+
+.noches-detalle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.noches-detalle-valor {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.noches-detalle-valor.noches-usadas {
+  color: #dc2626;
+}
+
+.noches-detalle-valor.noches-disponibles {
+  color: #059669;
+}
+
+.noches-detalle-label {
+  font-size: 12px;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Información adicional */
+.accionista-card-info {
+  padding: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.accionista-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.accionista-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.accionista-info-label {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.accionista-info-valor {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+/* Acciones asignadas */
+.accionista-card-acciones {
+  padding: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.acciones-titulo {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate);
+}
+
+.acciones-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.accion-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.accion-code {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy-800);
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+.accion-detalle {
+  font-size: 13px;
+  color: var(--slate);
+}
+
+/* Footer con botones de acción */
+.accionista-card-acciones-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #f8fafc;
+  flex-wrap: wrap;
+}
+
+.acciones-modulos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.acciones-modulos .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .consulta-input-row {
+    flex-direction: column;
+  }
+
+  .consulta-btn-buscar {
+    width: 100%;
+  }
+
+  .accionista-card-header {
+    flex-wrap: wrap;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .accionista-card-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+
+  .accionista-card-title {
+    flex-basis: 100%;
+    text-align: center;
+  }
+
+  .noches-numero {
+    font-size: 48px;
+  }
+
+  .noches-detalle {
+    gap: 20px;
+  }
+
+  .accionista-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .accionista-card-acciones-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .acciones-modulos {
+    justify-content: center;
+  }
+}

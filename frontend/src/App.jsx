@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import AccionistasManager from "./AccionistasManager";
 import AccionesManager from "./AccionesManager";
 import UsersManager from "./UsersManager";
+import ConsultaAccionista from "./ConsultaAccionista";
 import Landing from "./Landing";
 import BrandMark from "./BrandMark";
 
@@ -93,7 +94,7 @@ function App() {
   // If role changes and the current vista is not allowed, fall back to accionistas.
   useEffect(() => {
     if (!user) return;
-    const allowed = ["accionistas"];
+    const allowed = ["accionistas", "consulta"];
     if (user.role === "admin") {
       allowed.push("acciones", "users");
     }
@@ -124,6 +125,12 @@ function App() {
             onClick={() => setVista("accionistas")}
           >
             Accionistas
+          </button>
+          <button
+            className={`btn ${vista === "consulta" ? "btn-primary" : "btn-secondary"}`}
+            onClick={() => setVista("consulta")}
+          >
+            Consulta
           </button>
           {showAcciones && (
             <button
@@ -158,6 +165,7 @@ function App() {
       </header>
 
       {vista === "accionistas" && <AccionistasManager />}
+      {vista === "consulta" && <ConsultaAccionista />}
       {vista === "acciones" && <AccionesManager />}
       {vista === "users" && <UsersManager />}
     </div>

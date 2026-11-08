@@ -7,6 +7,7 @@ import accionesRoutes from "./routes/acciones.routes.ts";
 import accionesAsignacionRoutes from "./routes/acciones-asignacion.routes.ts";
 import usersRoutes from "./routes/users.routes.ts";
 import adminOnly from "./middleware/adminOnly.ts";
+import consultaRoutes from "./routes/consulta.routes.ts";
 
 const app = express();
 
@@ -24,6 +25,10 @@ app.use("/api", authRoutes);
 // API routes: accionistas module requires an authenticated user
 // (any role: admin or normal user).
 app.use("/api/accionistas", authMiddleware, accionistasRoutes);
+
+// Consulta de accionistas (búsqueda por DNI con noches de beneficio):
+// cualquier usuario autenticado.
+app.use("/api/consulta", authMiddleware, consultaRoutes);
 
 // Acciones routes: admin-only (module fully restricted).
 app.use("/api/acciones", authMiddleware, adminOnly, accionesRoutes);
