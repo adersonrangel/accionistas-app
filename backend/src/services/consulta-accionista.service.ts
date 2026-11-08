@@ -27,6 +27,11 @@ export function calcularNochesUsadas(
 	}, 0);
 }
 
+export type DescuentoNochesResult =
+	| { status: "not_found" }
+	| { status: "insufficient"; disponibles: number }
+	| { status: "ok"; data: ConsultaAccionistaResult };
+
 export interface ConsultaAccionistaResult {
 	id: number;
 	nombre: string;
@@ -129,4 +134,48 @@ export async function consultarPorDni(
 			nochesDeBeneficio: acc.nochesDeBeneficio || 0,
 		})),
 	};
+}
+
+/** Registra un descuento usando el saldo del año de la fecha seleccionada. */
+export async function descontarNoches(
+	dni: string,
+	cantidad: number,
+	fechaDescuento: Date,
+	usuario: string
+): Promise<DescuentoNochesResult> {
+	const accionista = (await Accionista.findOne({ dni }).lean()) as {
+		_id: unknown;
+	} | null;
+	if (!accionista) return { status: "not_found" };
+
+	const acciones = (await Accion.find({ shareholderId: accionista._id }).lean()) as Array<{
+		nochesDeBeneficio: number;
+	}>;
+	const nochesTotales = acciones.reduce(
+		(sum, acc) => sum + (acc.nochesDeBeneficio || 0),
+		0
+	);
+	const movimientos = (await MovimientoNoches.find({
+		shareholderId: accionista._id,
+	}).lean()) as MovimientoNoche[];
+	const nochesUsadas = calcularNochesUsadas(
+		movimientos,
+		fechaDescuento.getUTCFullYear()
+	);
+	const disponibles = Math.max(0, nochesTotales - nochesUsadas);
+
+	if (cantidad > disponibles) return { status: "insufficient", disponibles };
+
+	await MovimientoNoches.create({
+		shareholderId: accionista._id,
+		tipo: "descuento",
+		cantidad,
+		fechaDescuento,
+		usuario,
+		saldoAnterior: disponibles,
+		saldoNuevo: disponibles - cantidad,
+	});
+
+	const data = await consultarPorDni(dni);
+	return { status: "ok", data: data as ConsultaAccionistaResult };
 }

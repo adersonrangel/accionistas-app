@@ -296,4 +296,95 @@ describe("Consulta de accionista por DNI", () => {
 			expect(res.body.data.acciones[0].nochesDeBeneficio).toBe(15);
 		});
 	});
+
+	describe("POST /api/consulta/accionista/dni/:dni/descuento", () => {
+		it("registra el descuento con la fecha seleccionada y actualiza las noches", async () => {
+			const accionista = await crearAccionistaConAcciones("30111222", [
+				{ code: "00001", percentage: 25, noches: 10 },
+			]);
+			const fecha = new Date().toISOString().slice(0, 10);
+
+			const res = await request(app)
+				.post("/api/consulta/accionista/dni/30111222/descuento")
+				.set("Authorization", `Bearer ${userToken}`)
+				.send({ cantidad: 3, fecha });
+
+			expect(res.status).toBe(201);
+			expect(res.body.data.noches).toEqual({
+				totales: 10,
+				usadas: 3,
+				disponibles: 7,
+			});
+			const movimientos = await MovimientoNoches.find({
+				shareholderId: accionista._id,
+			}).lean();
+			expect(movimientos).toHaveLength(1);
+			expect(movimientos[0].tipo).toBe("descuento");
+			expect(movimientos[0].cantidad).toBe(3);
+			expect(movimientos[0].fechaDescuento.toISOString().slice(0, 10)).toBe(fecha);
+			expect(movimientos[0].usuario).toBe("normal");
+			expect(movimientos[0].saldoAnterior).toBe(10);
+			expect(movimientos[0].saldoNuevo).toBe(7);
+		});
+
+		it.each([0, 1.5])("rechaza la cantidad inválida %s sin persistir", async (cantidad) => {
+			const accionista = await crearAccionistaConAcciones("30111222", [
+				{ code: "00001", percentage: 25, noches: 10 },
+			]);
+
+			const res = await request(app)
+				.post("/api/consulta/accionista/dni/30111222/descuento")
+				.set("Authorization", `Bearer ${adminToken}`)
+				.send({ cantidad, fecha: new Date().toISOString().slice(0, 10) });
+
+			expect(res.status).toBe(400);
+			expect(res.body.error).toBe("La cantidad debe ser un número entero mayor o igual a 1");
+			expect(await MovimientoNoches.countDocuments({ shareholderId: accionista._id })).toBe(0);
+		});
+
+		it("rechaza una fecha inválida sin persistir", async () => {
+			const accionista = await crearAccionistaConAcciones("30111222", [
+				{ code: "00001", percentage: 25, noches: 10 },
+			]);
+
+			const res = await request(app)
+				.post("/api/consulta/accionista/dni/30111222/descuento")
+				.set("Authorization", `Bearer ${adminToken}`)
+				.send({ cantidad: 1, fecha: "fecha-invalida" });
+
+			expect(res.status).toBe(400);
+			expect(res.body.error).toBe("La fecha de descuento es inválida");
+			expect(await MovimientoNoches.countDocuments({ shareholderId: accionista._id })).toBe(0);
+		});
+
+		it("rechaza un descuento mayor a las disponibles sin cambiar el saldo", async () => {
+			const accionista = await crearAccionistaConAcciones("30111222", [
+				{ code: "00001", percentage: 25, noches: 5 },
+			]);
+			const fecha = new Date().toISOString().slice(0, 10);
+			await MovimientoNoches.create({
+				shareholderId: accionista._id,
+				tipo: "descuento",
+				cantidad: 4,
+				fechaDescuento: new Date(`${fecha}T00:00:00.000Z`),
+				usuario: "admin",
+				saldoAnterior: 5,
+				saldoNuevo: 1,
+			});
+
+			const res = await request(app)
+				.post("/api/consulta/accionista/dni/30111222/descuento")
+				.set("Authorization", `Bearer ${adminToken}`)
+				.send({ cantidad: 2, fecha });
+
+			expect(res.status).toBe(400);
+			expect(res.body.error).toBe("No hay noches suficientes disponibles");
+			expect(res.body.disponibles).toBe(1);
+			expect(await MovimientoNoches.countDocuments({ shareholderId: accionista._id })).toBe(1);
+			const consulta = await request(app)
+				.get("/api/consulta/accionista/dni/30111222")
+				.set("Authorization", `Bearer ${adminToken}`);
+			expect(consulta.body.data.noches.disponibles).toBe(1);
+		});
+	});
 });

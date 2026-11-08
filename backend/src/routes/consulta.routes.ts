@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { consultarPorDni } from "../services/consulta-accionista.service.ts";
+import {
+	consultarPorDni,
+	descontarNoches,
+} from "../services/consulta-accionista.service.ts";
 
 const router = Router();
 
@@ -28,6 +31,54 @@ router.get("/accionista/dni/:dni", async (req, res) => {
 		res.json({ data: resultado });
 	} catch (err) {
 		console.error("Error en consulta por DNI:", err);
+		res.status(500).json({ error: "Error interno del servidor" });
+	}
+});
+
+/**
+ * POST /api/consulta/accionista/dni/:dni/descuento
+ * Descuenta noches en la fecha seleccionada y devuelve el saldo actualizado.
+ * Acceso: cualquier usuario autenticado.
+ */
+router.post("/accionista/dni/:dni/descuento", async (req, res) => {
+	try {
+		const dni = req.params.dni.trim();
+		const { cantidad, fecha } = req.body ?? {};
+		if (!Number.isInteger(cantidad) || cantidad < 1) {
+			return res.status(400).json({
+				error: "La cantidad debe ser un número entero mayor o igual a 1",
+			});
+		}
+
+		const fechaDescuento = new Date(fecha);
+		if (!fecha || Number.isNaN(fechaDescuento.getTime())) {
+			return res.status(400).json({ error: "La fecha de descuento es inválida" });
+		}
+
+		const resultado = await descontarNoches(
+			dni,
+			cantidad,
+			fechaDescuento,
+			req.user?.username ?? ""
+		);
+		if (resultado.status === "not_found") {
+			return res.status(404).json({
+				error: "No se encontró ningún accionista con esa identificación",
+			});
+		}
+		if (resultado.status === "insufficient") {
+			return res.status(400).json({
+				error: "No hay noches suficientes disponibles",
+				disponibles: resultado.disponibles,
+			});
+		}
+
+		res.status(201).json({
+			data: resultado.data,
+			message: "Descuento registrado correctamente",
+		});
+	} catch (err) {
+		console.error("Error al descontar noches:", err);
 		res.status(500).json({ error: "Error interno del servidor" });
 	}
 });
