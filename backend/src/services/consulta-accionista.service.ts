@@ -6,6 +6,27 @@ const { Accionista } = accionistaModule as {
 	Accionista: typeof import("mongoose").Model;
 };
 
+export interface MovimientoNoche {
+	tipo: string;
+	cantidad: number;
+	fechaDescuento?: Date;
+	createdAt?: Date;
+}
+
+/** Calcula el saldo usado únicamente con movimientos del año indicado. */
+export function calcularNochesUsadas(
+	movimientos: MovimientoNoche[],
+	anio: number
+): number {
+	return movimientos.reduce((saldo, mov) => {
+		const fecha = mov.fechaDescuento ?? mov.createdAt;
+		if (!fecha || new Date(fecha).getUTCFullYear() !== anio) return saldo;
+		if (mov.tipo === "descuento") return saldo + mov.cantidad;
+		if (mov.tipo === "devolucion") return saldo - mov.cantidad;
+		return saldo;
+	}, 0);
+}
+
 export interface ConsultaAccionistaResult {
 	id: number;
 	nombre: string;
@@ -29,10 +50,10 @@ export interface ConsultaAccionistaResult {
 }
 
 /**
- * Busca un accionista por DNI y calcula sus noches de beneficio.
+ * Busca un accionista por identificación y calcula sus noches de beneficio.
  * - Noches totales: suma de nochesDeBeneficio de todas sus acciones asignadas
- * - Noches usadas: suma de descuentos menos devoluciones del historial
- * - Noches disponibles: totales - usadas
+ * - Noches usadas: descuentos menos devoluciones del año en curso
+ * - Noches disponibles: totales - usadas; se restablecen cada 1 de enero
  */
 export async function consultarPorDni(
 	dni: string
@@ -72,13 +93,12 @@ export async function consultarPorDni(
 	// 4. Calcular noches usadas desde el historial de movimientos
 	const movimientos = (await MovimientoNoches.find({
 		shareholderId: accionista._id,
-	}).lean()) as Array<{ tipo: string; cantidad: number }>;
+	}).lean()) as MovimientoNoche[];
 
-	const nochesUsadas = movimientos.reduce((saldo, mov) => {
-		if (mov.tipo === "descuento") return saldo + mov.cantidad;
-		if (mov.tipo === "devolucion") return saldo - mov.cantidad;
-		return saldo;
-	}, 0);
+	const nochesUsadas = calcularNochesUsadas(
+		movimientos,
+		new Date().getUTCFullYear()
+	);
 
 	const nochesDisponibles = Math.max(0, nochesTotales - nochesUsadas);
 

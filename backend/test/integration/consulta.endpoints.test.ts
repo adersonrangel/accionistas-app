@@ -139,6 +139,38 @@ describe("Consulta de accionista por DNI", () => {
 			expect(res.body.data.noches.disponibles).toBe(7); // 12 - 5
 		});
 
+		it("solo descuenta movimientos cuya fecha seleccionada pertenece al año en curso", async () => {
+			const accionista = await crearAccionistaConAcciones("30999000", [
+				{ code: "00001", percentage: 10, noches: 10 },
+			]);
+			const anioActual = new Date().getUTCFullYear();
+			const movimientos = [
+				{ cantidad: 4, fechaDescuento: new Date(Date.UTC(anioActual - 1, 11, 31)) },
+				{ cantidad: 3, fechaDescuento: new Date(Date.UTC(anioActual, 0, 1)) },
+				{ cantidad: 2, fechaDescuento: new Date(Date.UTC(anioActual + 1, 0, 1)) },
+			];
+
+			for (const movimiento of movimientos) {
+				await MovimientoNoches.create({
+					shareholderId: accionista._id,
+					tipo: "descuento",
+					...movimiento,
+					usuario: "admin",
+					saldoAnterior: 10,
+					saldoNuevo: 6,
+				});
+			}
+
+			const res = await request(app)
+				.get("/api/consulta/accionista/dni/30999000")
+				.set("Authorization", `Bearer ${adminToken}`);
+
+			expect(res.status).toBe(200);
+			expect(res.body.data.noches.totales).toBe(10);
+			expect(res.body.data.noches.usadas).toBe(3);
+			expect(res.body.data.noches.disponibles).toBe(7);
+		});
+
 		it("las devoluciones suman a las noches disponibles", async () => {
 			const accionista = await crearAccionistaConAcciones("30333444", [
 				{ code: "00001", percentage: 10, noches: 10 },

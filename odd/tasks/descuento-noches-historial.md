@@ -15,7 +15,7 @@ Backend: endpoints de descuento e historial + filtro por año en curso. Frontend
 
 ## Tasks
 
-- T1 (S2,S5,S7): Backend — agregar campo `fechaDescuento` (Date, opcional para conservar registros históricos; obligatorio en los nuevos descuentos del endpoint) al modelo `MovimientoNoches`. Ruta: inline. Commit: `feat(backend): add discount date to night movements model`.
+- T1 (S2,S5,S7): Backend — agregar campo `fechaDescuento` (Date, opcional para conservar registros históricos; obligatorio en los nuevos descuentos del endpoint) al modelo `MovimientoNoches`. Ruta: inline. Commit: `66e72b6` — `feat(backend): add discount date to night movements`.
 - T2 (S5): Backend — `consultarPorDni` filtra movimientos por `fechaDescuento` dentro del año en curso (1 ene 00:00:00.000 UTC <= fecha < 1 ene del año siguiente). Compatibilidad: movimientos sin `fechaDescuento` usan `createdAt`. Ruta: inline. Commit: `feat(backend): reset night balance every January 1st by discount year`.
 - T3 (S1,S2,S4,S6,S7): Backend — `POST /api/consulta/accionista/dni/:dni/descuento` con body `{ cantidad, fecha }`: valida entero >= 1, fecha válida, disponibilidad suficiente del año de esa fecha; persiste movimiento `descuento` con `fechaDescuento`, `usuario` del token, `saldoAnterior`/`saldoNuevo`; devuelve el resultado actualizado de la consulta. Tests de integración. Ruta: inline. Commit: `feat(backend): add night discount endpoint with availability validation`.
 - T4 (S3,S6): Backend — `GET /api/consulta/accionista/dni/:dni/historial`: devuelve movimientos del accionista ordenados por `fechaDescuento` descendente con fecha, tipo, cantidad, motivo, usuario. Tests de integración. Ruta: inline. Commit: `feat(backend): add night movements history endpoint`.
