@@ -12,6 +12,7 @@ Backend: endpoints de descuento e historial + filtro por año en curso. Frontend
 - S5: "las noches de beneficio vuelven a su estado normal para todos los accionista el primero de enero del año en curso" — solo los movimientos cuya **fecha de descuento seleccionada** pertenece al año en curso restan del saldo. Movimientos de años anteriores no restan (noches disponibles completas). Decisión del usuario: el año lo define la fecha seleccionada en el popup, no `createdAt`.
 - S6: "Cualquier usuario autenticado" puede descontar y ver historial (decisión del usuario; mismo alcance que la consulta).
 - S7: La cantidad a descontar debe ser un entero >= 1 y no puede superar las noches disponibles del año en curso; si no hay disponibilidad suficiente, el backend rechaza con 400 y no persiste nada.
+- S8: "si. ejecuta el edurecimiento" — respecto del riesgo de concurrencia presentado: dos descuentos simultáneos para el mismo accionista deben ejecutarse secuencialmente, de modo que solo uno pueda descontar cuando el saldo no alcanza para ambos.
 
 ## Tasks
 
@@ -21,6 +22,7 @@ Backend: endpoints de descuento e historial + filtro por año en curso. Frontend
 - T4 (S3,S6): Backend — `GET /api/consulta/accionista/dni/:dni/historial`: devuelve movimientos del accionista ordenados por `fechaDescuento` descendente con fecha, tipo, cantidad, motivo, usuario. Tests de integración. Ruta: inline. Commit: `e0b5eda` — `feat(backend): add night movements history endpoint`.
 - T5 (S1,S2,S4): Frontend — modal de descuento (cantidad + fecha default hoy) desde "Descontar noches"; al confirmar llama al endpoint y refresca la card con las noches actualizadas. Tests. Ruta: inline. Commit: `0419385` — `feat(frontend): add night discount popup`.
 - T6 (S3): Frontend — vista de historial (fecha y noches tomadas, con devoluciones) desde "Ver historial". Tests. Ruta: inline. Commit: `ad18c3c` — `feat(frontend): show night movements history`.
+- T7 (S8): Backend — serializar descuentos concurrentes por accionista con una cola en el proceso Node (deploy actual de una instancia); validar con dos POST simultáneos que solo uno persista cuando el saldo no alcanza para ambos. Ruta: inline. Commit pendiente.
 
 ## Log
 
@@ -29,3 +31,4 @@ Backend: endpoints de descuento e historial + filtro por año en curso. Frontend
 - L3: Corte de slice: backend completo hasta `e0b5eda` (395 líneas acumuladas); frontend inicia en `0419385`. No se crean PRs ni se publica sin decisión del usuario.
 - L4: Verificación: suites focalizadas de consulta backend 17/17 y frontend nueva 2/2. Suite backend completa: 64 passed, 28 skipped; `accionistas.endpoints.test.ts` y `auth.users.endpoints.test.ts` fallaron en `beforeAll` por timeout de 10s al crear MongoMemoryServer, sin fallos de aserción. Verificador independiente `mw8cxhtp-1-73c3` expiró antes de comenzar y no entregó output; no se relanzó.
 - L5: Suite frontend completa: 136 passed, 4 failed por timeouts de 10s en Landing (1), AccionistasManager (2) y UsersManager (1); ConsultaAccionista 2/2 pasó. Build de producción exitoso. Lint excedió 30s sin entregar resultado. Riesgo abierto: el descuento usa validación e inserción no atómicas; dos pedidos simultáneos pueden leer el mismo saldo. Falta decisión del usuario sobre endurecer concurrencia y sobre aceptar el cierre con checks completos no concluyentes.
+- L6: "si. ejecuta el edurecimiento". El usuario autorizó el hardening de concurrencia. Alcance técnico: cola por accionista dentro del proceso Node actual; no resuelve coordinación entre múltiples instancias del backend.

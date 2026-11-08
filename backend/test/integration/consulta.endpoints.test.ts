@@ -327,6 +327,32 @@ describe("Consulta de accionista por DNI", () => {
 			expect(movimientos[0].saldoNuevo).toBe(7);
 		});
 
+		it("serializa descuentos simultáneos del mismo accionista para impedir sobregiro", async () => {
+			const accionista = await crearAccionistaConAcciones("30111222", [
+				{ code: "00001", percentage: 25, noches: 10 },
+			]);
+			const fecha = new Date().toISOString().slice(0, 10);
+			const descontar = () => request(app)
+				.post("/api/consulta/accionista/dni/30111222/descuento")
+				.set("Authorization", `Bearer ${adminToken}`)
+				.send({ cantidad: 6, fecha });
+
+			const respuestas = await Promise.all([descontar(), descontar()]);
+
+			expect(respuestas.map((res) => res.status).sort()).toEqual([201, 400]);
+			const rechazado = respuestas.find((res) => res.status === 400);
+			expect(rechazado.body.disponibles).toBe(4);
+			expect(await MovimientoNoches.countDocuments({ shareholderId: accionista._id })).toBe(1);
+			const consulta = await request(app)
+				.get("/api/consulta/accionista/dni/30111222")
+				.set("Authorization", `Bearer ${adminToken}`);
+			expect(consulta.body.data.noches).toEqual({
+				totales: 10,
+				usadas: 6,
+				disponibles: 4,
+			});
+		});
+
 		it.each([0, 1.5])("rechaza la cantidad inválida %s sin persistir", async (cantidad) => {
 			const accionista = await crearAccionistaConAcciones("30111222", [
 				{ code: "00001", percentage: 25, noches: 10 },

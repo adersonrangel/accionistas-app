@@ -165,6 +165,33 @@ export async function obtenerHistorial(dni: string) {
 		.sort((a, b) => new Date(b.fecha ?? 0).getTime() - new Date(a.fecha ?? 0).getTime());
 }
 
+// Serializa validación + escritura por accionista dentro de esta instancia de
+// Node. La cola se elimina al quedar vacía y los errores no bloquean al siguiente.
+const colasDescuento = new Map<string, Promise<void>>();
+
+async function conDescuentoSerializado<T>(
+	shareholderId: string,
+	operacion: () => Promise<T>
+): Promise<T> {
+	const anterior = colasDescuento.get(shareholderId) ?? Promise.resolve();
+	let liberar!: () => void;
+	const actual = new Promise<void>((resolve) => {
+		liberar = resolve;
+	});
+	const cola = anterior.then(() => actual);
+	colasDescuento.set(shareholderId, cola);
+
+	await anterior;
+	try {
+		return await operacion();
+	} finally {
+		liberar();
+		if (colasDescuento.get(shareholderId) === cola) {
+			colasDescuento.delete(shareholderId);
+		}
+	}
+}
+
 /** Registra un descuento usando el saldo del año de la fecha seleccionada. */
 export async function descontarNoches(
 	dni: string,
@@ -177,34 +204,36 @@ export async function descontarNoches(
 	} | null;
 	if (!accionista) return { status: "not_found" };
 
-	const acciones = (await Accion.find({ shareholderId: accionista._id }).lean()) as Array<{
-		nochesDeBeneficio: number;
-	}>;
-	const nochesTotales = acciones.reduce(
-		(sum, acc) => sum + (acc.nochesDeBeneficio || 0),
-		0
-	);
-	const movimientos = (await MovimientoNoches.find({
-		shareholderId: accionista._id,
-	}).lean()) as MovimientoNoche[];
-	const nochesUsadas = calcularNochesUsadas(
-		movimientos,
-		fechaDescuento.getUTCFullYear()
-	);
-	const disponibles = Math.max(0, nochesTotales - nochesUsadas);
+	return conDescuentoSerializado(String(accionista._id), async () => {
+		const acciones = (await Accion.find({ shareholderId: accionista._id }).lean()) as Array<{
+			nochesDeBeneficio: number;
+		}>;
+		const nochesTotales = acciones.reduce(
+			(sum, acc) => sum + (acc.nochesDeBeneficio || 0),
+			0
+		);
+		const movimientos = (await MovimientoNoches.find({
+			shareholderId: accionista._id,
+		}).lean()) as MovimientoNoche[];
+		const nochesUsadas = calcularNochesUsadas(
+			movimientos,
+			fechaDescuento.getUTCFullYear()
+		);
+		const disponibles = Math.max(0, nochesTotales - nochesUsadas);
 
-	if (cantidad > disponibles) return { status: "insufficient", disponibles };
+		if (cantidad > disponibles) return { status: "insufficient", disponibles };
 
-	await MovimientoNoches.create({
-		shareholderId: accionista._id,
-		tipo: "descuento",
-		cantidad,
-		fechaDescuento,
-		usuario,
-		saldoAnterior: disponibles,
-		saldoNuevo: disponibles - cantidad,
+		await MovimientoNoches.create({
+			shareholderId: accionista._id,
+			tipo: "descuento",
+			cantidad,
+			fechaDescuento,
+			usuario,
+			saldoAnterior: disponibles,
+			saldoNuevo: disponibles - cantidad,
+		});
+
+		const data = await consultarPorDni(dni);
+		return { status: "ok", data: data as ConsultaAccionistaResult };
 	});
-
-	const data = await consultarPorDni(dni);
-	return { status: "ok", data: data as ConsultaAccionistaResult };
 }
