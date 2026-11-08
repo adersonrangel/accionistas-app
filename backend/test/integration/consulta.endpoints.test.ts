@@ -387,4 +387,53 @@ describe("Consulta de accionista por DNI", () => {
 			expect(consulta.body.data.noches.disponibles).toBe(1);
 		});
 	});
+
+	describe("GET /api/consulta/accionista/dni/:dni/historial", () => {
+		it("devuelve la fecha y las noches de todos los movimientos, más recientes primero", async () => {
+			const accionista = await crearAccionistaConAcciones("30111222", [
+				{ code: "00001", percentage: 25, noches: 10 },
+			]);
+			await MovimientoNoches.create({
+				shareholderId: accionista._id,
+				tipo: "descuento",
+				cantidad: 2,
+				fechaDescuento: new Date("2025-12-20T00:00:00.000Z"),
+				motivo: "Fin de semana",
+				usuario: "normal",
+				saldoAnterior: 10,
+				saldoNuevo: 8,
+			});
+			await MovimientoNoches.create({
+				shareholderId: accionista._id,
+				tipo: "devolucion",
+				cantidad: 1,
+				fechaDescuento: new Date("2026-01-15T00:00:00.000Z"),
+				motivo: "Cancelación",
+				usuario: "admin",
+				saldoAnterior: 7,
+				saldoNuevo: 8,
+			});
+
+			const res = await request(app)
+				.get("/api/consulta/accionista/dni/30111222/historial")
+				.set("Authorization", `Bearer ${userToken}`);
+
+			expect(res.status).toBe(200);
+			expect(res.body.data).toHaveLength(2);
+			expect(res.body.data[0]).toMatchObject({
+				tipo: "devolucion",
+				cantidad: 1,
+				fecha: "2026-01-15T00:00:00.000Z",
+				motivo: "Cancelación",
+				usuario: "admin",
+			});
+			expect(res.body.data[1]).toMatchObject({
+				tipo: "descuento",
+				cantidad: 2,
+				fecha: "2025-12-20T00:00:00.000Z",
+				motivo: "Fin de semana",
+				usuario: "normal",
+			});
+		});
+	});
 });

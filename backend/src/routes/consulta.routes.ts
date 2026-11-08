@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
 	consultarPorDni,
 	descontarNoches,
+	obtenerHistorial,
 } from "../services/consulta-accionista.service.ts";
 
 const router = Router();
@@ -31,6 +32,26 @@ router.get("/accionista/dni/:dni", async (req, res) => {
 		res.json({ data: resultado });
 	} catch (err) {
 		console.error("Error en consulta por DNI:", err);
+		res.status(500).json({ error: "Error interno del servidor" });
+	}
+});
+
+/**
+ * GET /api/consulta/accionista/dni/:dni/historial
+ * Devuelve todos los movimientos con su fecha efectiva y noches.
+ * Acceso: cualquier usuario autenticado.
+ */
+router.get("/accionista/dni/:dni/historial", async (req, res) => {
+	try {
+		const historial = await obtenerHistorial(req.params.dni.trim());
+		if (!historial) {
+			return res.status(404).json({
+				error: "No se encontró ningún accionista con esa identificación",
+			});
+		}
+		res.json({ data: historial });
+	} catch (err) {
+		console.error("Error al obtener el historial de noches:", err);
 		res.status(500).json({ error: "Error interno del servidor" });
 	}
 });

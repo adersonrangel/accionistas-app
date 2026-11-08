@@ -136,6 +136,35 @@ export async function consultarPorDni(
 	};
 }
 
+/** Devuelve el historial completo ordenado por fecha efectiva descendente. */
+export async function obtenerHistorial(dni: string) {
+	const accionista = (await Accionista.findOne({ dni }).lean()) as {
+		_id: unknown;
+	} | null;
+	if (!accionista) return null;
+
+	const movimientos = (await MovimientoNoches.find({
+		shareholderId: accionista._id,
+	}).lean()) as Array<
+		MovimientoNoche & {
+			_id: unknown;
+			motivo?: string;
+			usuario?: string;
+		}
+	>;
+
+	return movimientos
+		.map((mov) => ({
+			id: String(mov._id),
+			tipo: mov.tipo,
+			cantidad: mov.cantidad,
+			fecha: mov.fechaDescuento ?? mov.createdAt,
+			motivo: mov.motivo ?? "",
+			usuario: mov.usuario ?? "",
+		}))
+		.sort((a, b) => new Date(b.fecha ?? 0).getTime() - new Date(a.fecha ?? 0).getTime());
+}
+
 /** Registra un descuento usando el saldo del año de la fecha seleccionada. */
 export async function descontarNoches(
 	dni: string,
