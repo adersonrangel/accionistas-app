@@ -26,6 +26,11 @@ const movimientoNochesSchema = new Schema(
 				message: "La cantidad debe ser un número entero",
 			},
 		},
+		// Fecha efectiva seleccionada al descontar. Los registros históricos
+		// anteriores a este campo usan createdAt para calcular su año.
+		fechaDescuento: {
+			type: Date,
+		},
 		motivo: {
 			type: String,
 			default: "",
